@@ -141,32 +141,28 @@ In real data analysis, we apply our proposed method to the multivariate clustere
 
 ```{r message=FALSE, warning=FALSE}
 library(PICBayes)
-
 data("mCRC")
-d = with(data.frame(mCRC), data.frame(L = as.numeric(L),
-                                      R = as.numeric(R),
-                                      U = ifelse(y==0,R,L),
+d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       V = ifelse(y==2,L,R),
                                       # Cluster weighted data
+                                      id=(rep(c(table(SITE)),c(table(SITE)))),
                                       # Treatment arm: 0 = FOLFIRI alone, 1 = Panitumumab + FOLFIRI.
                                       x1= case_when(TRT_C == 0 ~ 0, #Pan et al data
                                                     TRT_C == 1 ~ 1),
                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
-                                      id = as.numeric(SITE),
-                                      y = as.numeric(y),
                                       delta = case_when(IC == 0 ~ 1,
                                                         IC == 1 ~ 0)
 ));
+L=d$U;R=d$V; delta=d$delta
 L=(log(d$U));R=log(d$V); delta=d$delta
-x = cbind(x1=d$x1,x2=d$x2); id=d$id;  tau=0.1;
-
+x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
 ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau, estimation = "dr")
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.99,index=2)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.99,index=5)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=NULL,wttype = "nonparam",hlimit=0.99)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,hlimit=0.9)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "dr")
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,index = 2,wttype = "nonparam",hlimit=0.99)
 ```
 
 
