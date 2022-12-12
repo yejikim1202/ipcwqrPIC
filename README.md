@@ -25,7 +25,7 @@ i.e., $T$ is left-censored if $L=0$ and right-censored if $R=\infty$.
 ## Description
 A R package `ipcwqrPIC` implements an inverse-probability censoring weighted (IPCW) procedure for censored quantile regression for (cluster-correlated) partially interval-censored data, which includes both double-censoring and partially interval-censoring.
 
-Vignettes is available in [here](http://htmlpreview.github.io/?https://github.com/YejiStat/ipcwqrPIC/blob/main/vignettes/ipcwQR.html).
+Vignettes is available in [here](http://htmlpreview.github.io/?https://github.com/YejiStat/ipcwqrPIC/blob/main/vignettes/ipcwqrPIC.html).
 
 
 ## Usages 
@@ -51,11 +51,11 @@ L=(log(d$U));R=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
 
 # Cluster (unadjusted)
-ipcwQR::picrq(L,R,delta,x=x,tau=tau)
-ipcwQR::picrq(L,R,delta,x=x,tau=tau, estimation = "dr")
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau, estimation = "dr")
 # Cluster (adjusted)
-ipcwQR::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9,k=2)
-ipcwQR::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9,k=2)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9)
 ```
 
 
