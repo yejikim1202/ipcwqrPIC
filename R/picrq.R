@@ -13,7 +13,7 @@ NULL
 #' @param wttype weight estimating method, default is "param" and Beran's nonparametric KM estimating method as "nonparam".
 #' @param hlimit bandwidth value, default is 0.5.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
-#' @param k index of cluster weight.
+#' @param index index of cluster weight.
 #' @param maxit maximum number of iteration for the log-rank estimator, default is 100.
 #' @param tol tolerance of iteration for the log-rank estimator, default is 1e-3.
 #'
@@ -87,7 +87,6 @@ NULL
 #' @export
 #'
 #'
-
 
 picrq=function(L,R,delta,x,tau,estimation=NULL,wttype="param",hlimit=0.5,id=NULL,index=1,maxit=100,tol=1e-3){
   
@@ -301,7 +300,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,wttype="param",hlimit=0.5,id=NULL
   while (i<max.iter & eps >= tol ) {
     Amat = Afunc(L,R,delta,x,beta=c(old_beta),ww=ww,Sigma = old_Sigma,eta=eta)
     if(is.null(estimation)){
-      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L,R,delta,x,ww=ww,beta=c(old_beta),Sigma = old_Sigma,tau,eta=eta)/(n^(3/2))}
+      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L,R,delta,x,ww=ww,beta=c(old_beta),Sigma = old_Sigma,tau,eta=eta)/(n^(1))}
     else if(estimation=="dr"){wr=Rwtfunc(L,R,delta);wl=Lwtfunc(L,R,delta);
     new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L,R,delta,x,ww=ww,wl=wl,wr=wr,beta=c(old_beta),Sigma = old_Sigma,tau,eta=eta)/(n^(3/2))}
     # new_beta = BB::dfsane(par=old_beta,fn=U_n,Y=Y,x=x,ww=ww,Sigma=old_Sigma,tau=tau,control=list(trace=FALSE))$par
