@@ -53,21 +53,6 @@ ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS")
 #> Intercept 0.1     2.548123 0.115091 0.000000  2.322544 2.773702
 #> 2         0.1     0.170877 0.151378 0.129488 -0.125823 0.467577
 #> 3         0.1     0.240066 0.149144 0.053739 -0.052256 0.532387
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",wttype="Beran",hlimit=0.9)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.547450 0.115572 0.000000  2.320928 2.773972
-#> 2         0.1     0.171169 0.152337 0.130587 -0.127411 0.469750
-#> 3         0.1     0.240012 0.150024 0.054819 -0.054035 0.534058
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",estimation = "dr")
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.557157 0.114341 0.000000  2.333049 2.781265
-#> 2         0.1     0.170591 0.151842 0.130617 -0.127019 0.468200
-#> 3         0.1     0.240679 0.149507 0.053718 -0.052354 0.533712
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.548316 0.174372 0.000000  2.206548 2.890085
-#> 2         0.1     0.168756 0.247927 0.248041 -0.317181 0.654693
-#> 3         0.1     0.256124 0.247197 0.150075 -0.228382 0.740630
 ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id,wttype = "Beran",hlimit = 0.9)
 #>           tau coefficients       se   pvalue  lower bd upper bd
 #> Intercept 0.1     2.547849 0.187606 0.000000  2.180142 2.915557
