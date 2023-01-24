@@ -78,7 +78,10 @@ ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=i
 
 ## References
 
+
 * Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data. Technical Report, Univ.California, Berkeley.
+
+* Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
 
 * Chiou, S. H., Kang, S. and Yan, J. (2015). 
 Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach.
@@ -87,10 +90,14 @@ Statistics in Medicine 34(9): 1495–-1510.
 * Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-
 dependent covariates. Biostatistics. 18 (1), 132–146.
 
+* Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
+
+* Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
+
 * Pan, C. (2021). 
 PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. 
 https://CRAN.R-project.org/package=PICBayes.
 
-* Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). 
+* Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). 
 Inverse weighted quantile regression with partially interval-censored data.
 *Submitted to SMMR*.
