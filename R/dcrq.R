@@ -73,7 +73,6 @@ NULL
 #'
 #'
 
-
 dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
   library(extRemes)
   library(MASS)
@@ -316,10 +315,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="para
       wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
       new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
     }
-    if(var.estimation=="IS" & is.null(id)==F){
-      print("Use another variance estimating method (var.estimation=bootstrap)."); Gamma=NULL
-    }
-    else if(var.estimation=="IS"){
+    if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     else if(var.estimation=="bootstrap" & is.null(id)){
