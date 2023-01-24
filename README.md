@@ -31,31 +31,48 @@ Vignettes is available in [here](http://htmlpreview.github.io/?https://github.co
 ## Usages 
 ```{r}
 library(PICBayes)
-
 data("mCRC")
 d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       V = ifelse(y==2,L,R),
                                       # Cluster weighted data
+                                      id=(rep(c(table(SITE)),c(table(SITE)))),
                                       # Treatment arm: 0 = FOLFIRI alone, 1 = Panitumumab + FOLFIRI.
                                       x1= case_when(TRT_C == 0 ~ 0, #Pan et al data
                                                     TRT_C == 1 ~ 1),
                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
-                                      id = as.numeric(SITE),
-                                      y = as.numeric(y),
                                       delta = case_when(IC == 0 ~ 1,
                                                         IC == 1 ~ 0)
 ));
+L=d$U;R=d$V; delta=d$delta
 L=(log(d$U));R=log(d$V); delta=d$delta
-x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
-
-# Cluster (unadjusted)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau, estimation = "dr")
-# Cluster (adjusted)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9,k=2)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,id=id,hlimit=0.9)
+x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS")
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.548123 0.115091 0.000000  2.322544 2.773702
+#> 2         0.1     0.170877 0.151378 0.129488 -0.125823 0.467577
+#> 3         0.1     0.240066 0.149144 0.053739 -0.052256 0.532387
+ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",wttype="Beran",hlimit=0.9)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.547450 0.115572 0.000000  2.320928 2.773972
+#> 2         0.1     0.171169 0.152337 0.130587 -0.127411 0.469750
+#> 3         0.1     0.240012 0.150024 0.054819 -0.054035 0.534058
+ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",estimation = "dr")
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.557157 0.114341 0.000000  2.333049 2.781265
+#> 2         0.1     0.170591 0.151842 0.130617 -0.127019 0.468200
+#> 3         0.1     0.240679 0.149507 0.053718 -0.052354 0.533712
+ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.548316 0.174372 0.000000  2.206548 2.890085
+#> 2         0.1     0.168756 0.247927 0.248041 -0.317181 0.654693
+#> 3         0.1     0.256124 0.247197 0.150075 -0.228382 0.740630
+ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id,wttype = "Beran",hlimit = 0.9)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.547849 0.187606 0.000000  2.180142 2.915557
+#> 2         0.1     0.168973 0.248892 0.248601 -0.318856 0.656802
+#> 3         0.1     0.256108 0.237155 0.140089 -0.208715 0.720932
 ```
 
 
