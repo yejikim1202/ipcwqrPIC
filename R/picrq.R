@@ -157,7 +157,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
         srl[i] = 1/pmax(1-(sr-sl),0.001)
       }
     }
-    srl[is.na(srl)]=0
     srl
   }
   
@@ -317,8 +316,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
   
   if(wttype=="param"){ww=wtpicft(L=L,R=R,delta=delta);}
-  else if(wttype=="Ishwaran" & n==sum(delta==1)){print("Use another weight estimating method (wttype=param or wttype=Beran)."); ww=NULL}
+  else if(wttype=="Ishwaran" & n==sum(delta==1)){print("Use parametric weight estimating method (wttype=param)."); ww=NULL}
   else if(wttype=="Ishwaran"){ww=Ishrfwtpicfunc(L=L,R=R,delta=delta,x=x);}
+  else if(wttype=="Beran" & n==sum(delta==1)){print("Use parametric weight estimating method (wttype=param)."); ww=NULL}
   else if(wttype=="Beran" & is.null(hlimit)==F){ww=Berwtpicfunc(L=L,R=R,delta=delta,x=x,h=hlimit);}
   xx = as.matrix(cbind(1,x)); p = ncol(xx)
   old_beta = init = beta = PICrq(L=L,R=R,delta=delta,x=x,ww=ww,eta=eta,tau=tau)
