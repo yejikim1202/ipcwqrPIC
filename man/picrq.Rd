@@ -11,8 +11,9 @@ picrq(
   x,
   tau,
   estimation = NULL,
+  var.estimation = NULL,
   wttype = "param",
-  hlimit = 0.5,
+  hlimit = NULL,
   id = NULL,
   index = 1,
   maxit = 100,
@@ -30,19 +31,21 @@ picrq(
 
 \item{tau}{quantile level.}
 
-\item{estimation}{estimating method of partly interval censored, if estimation="dr", doubly robust estimator is estimated.}
+\item{estimation}{estimating method of partly interval censored, default is "NULL" and if estimation="dr", doubly robust estimator is estimated.}
 
-\item{wttype}{weight estimating method, default is "param" and Beran's nonparametric KM estimating method as "nonparam".}
+\item{var.estimation}{estimating method of variance, if var.estimation="IS", induced smoothing method is used, else if var.estimation="bootstrap", bootstrap estimating method of Zeng and Lin is used.}
 
-\item{hlimit}{bandwidth value, default is 0.5.}
+\item{wttype}{weight estimating method, default is "param", Beran's nonparametric KM estimating method as "Beran", and Ishwaran's nonparametric survival random forests estimating method as "Ishwaran"}
+
+\item{hlimit}{bandwidth value, set \code{hlimit=NULL}.}
 
 \item{id}{cluster id. If the data does not have clustered structure, set \code{id=NULL}.}
 
-\item{maxit}{maximum number of iteration for the log-rank estimator, default is 100.}
+\item{index}{index of cluster weight.}
 
-\item{tol}{tolerance of iteration for the log-rank estimator, default is 1e-3.}
+\item{maxit}{maximum number of iteration for the IPCW method estimator, default is 100.}
 
-\item{k}{index of cluster weight.}
+\item{tol}{tolerance of iteration for the IPCW method estimator, default is 1e-3.}
 }
 \value{
 \code{picrq} returns a data frame containing at least the following components:
@@ -76,9 +79,9 @@ U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
 V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 delta = ifelse(U==V, 1, 0)
 tau=0.3
-picrq(L=V,R=U,delta=delta,x=x,tau=tau)
-picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "dr")
-
+picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS")
+picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Beran",hlimit=0.1,var.estimation="IS")
+picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Ishwaran",var.estimation="IS")
 
 # Data example
 library(PICBayes)
@@ -99,19 +102,23 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
 L=d$U;R=d$V; delta=d$delta
 L=(log(d$U));R=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-picrq(L,R,delta,x=x,tau=tau)
-picrq(L,R,delta,x=x,tau=tau,hlimit=0.9)
-picrq(L,R,delta,x=x,tau=tau,estimation = "dr")
-picrq(L,R,delta,x=x,tau=tau,id=id)
-picrq(L,R,delta,x=x,tau=tau,id=id,index = 2)
+picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="IS")
+picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="bootstrap")
+picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype = "Beran",hlimit = 0.9,var.estimation="bootstrap")
 }
 }
 \references{
 Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data. Technical Report, Univ.California, Berkeley.
 
+Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
+
+Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-dependent covariates. Biostatistics. 18 (1), 132–146.
+
 Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
 
-Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). Inverse weighted quantile regression with partially interval-censored data.
+Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
+
+Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
 
 Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
 }
