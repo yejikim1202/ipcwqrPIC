@@ -36,6 +36,8 @@ NULL
 #' 
 #' Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
 #' 
+#' Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-dependent covariates. Biostatistics. 18 (1), 132–146.
+#' 
 #' Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
 #' 
 #' Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
@@ -365,44 +367,3 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   rownames(res)[1]="Intercept"
   round((res), 6) 
 }
-
-# Simulations
-set.seed(111)
-n = 200
-x1 = runif(n,-1,1)
-x2 = rbinom(n,1,0.43)
-x = cbind(x1,x2)
-T = 2 + x1 + x2 + rnorm(n)
-U = (1 - 0.25*x1)*runif(n, -6, 5)
-V = U + (1 - 0.1*x2)*runif(n, 6, 20)
-U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
-V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
-delta = ifelse(U==V, 1, 0); delta
-tau=0.3
-picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS")
-picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Beran",hlimit=0.1,var.estimation="IS")
-picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Ishwaran",var.estimation="IS")
-
-
-# Data example
-library(PICBayes)
-data("mCRC")
-d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
-                                      V = ifelse(y==2,L,R),
-                                      # Cluster weighted data
-                                      id=(rep(c(table(SITE)),c(table(SITE)))),
-                                      # Treatment arm: 0 = FOLFIRI alone, 1 = Panitumumab + FOLFIRI.
-                                      x1= case_when(TRT_C == 0 ~ 0, #Pan et al data
-                                                    TRT_C == 1 ~ 1),
-                                      # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
-                                      x2= case_when(KRAS_C == 0 ~ 1,
-                                                    KRAS_C == 1 ~ 0),
-                                      delta = case_when(IC == 0 ~ 1,
-                                                        IC == 1 ~ 0)
-));
-L=d$U;R=d$V; delta=d$delta
-L=(log(d$U));R=log(d$V); delta=d$delta
-x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="IS")
-picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="bootstrap")
-picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype = "Beran",hlimit = 0.9,var.estimation="bootstrap")
