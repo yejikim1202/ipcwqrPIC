@@ -68,7 +68,7 @@ dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "IS")
 
 See the detailed description from help(picrq()) and help(dcrq()).
 
-We first simulate univariate partly interval-censored (PIC) data with normal random error, which is similar to PIC data simulation setting of Kim et al. (2022+).
+We first simulate univariate partly interval-censored (PIC) data with normal random error, which is similar to PIC data simulation setting of Kim et al. (2023+).
 
 ```{r message=FALSE, warning=FALSE}
 library(ipcwqrPIC)
