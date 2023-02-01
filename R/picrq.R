@@ -321,7 +321,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
   if(is.null(id)){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
-  if(wttype=="param"){ww=wtpicft(L=L,R=R,delta=delta);}
+  if(wttype=="Param"){ww=wtpicft(L=L,R=R,delta=delta);}
   else if(wttype=="Ishwaran" & n==sum(delta==1)){print("Use another weight estimating method.")}
   else if(wttype=="Ishwaran"){ww=Ishrfwtpicfunc(L=L,R=R,delta=delta,x=x);}
   else if(wttype=="Beran" & n==sum(delta==1)){print("Use another weight estimating method.")}
