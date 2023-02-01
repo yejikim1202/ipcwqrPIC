@@ -45,19 +45,28 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       delta = case_when(IC == 0 ~ 1,
                                                         IC == 1 ~ 0)
 ));
-L=d$U;R=d$V; delta=d$delta
 L=(log(d$U));R=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS")
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS")
 #>           tau coefficients       se   pvalue  lower bd upper bd
 #> Intercept 0.1     2.548123 0.115091 0.000000  2.322544 2.773702
 #> 2         0.1     0.170877 0.151378 0.129488 -0.125823 0.467577
 #> 3         0.1     0.240066 0.149144 0.053739 -0.052256 0.532387
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id,wttype = "Beran",hlimit = 0.9)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.547849 0.187606 0.000000  2.180142 2.915557
-#> 2         0.1     0.168973 0.248892 0.248601 -0.318856 0.656802
-#> 3         0.1     0.256108 0.237155 0.140089 -0.208715 0.720932
+#> Intercept 0.1     2.549014 0.096420 0.000000  2.360030 2.737998
+#> 2         0.1     0.167647 0.125468 0.090746 -0.078270 0.413563
+#> 3         0.1     0.248939 0.123488 0.021905  0.006903 0.490975
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.9,var.estimation = "IS",id=id,index = 1)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.548473 0.096867 0.000000  2.358614 2.738332
+#> 2         0.1     0.167874 0.126269 0.091841 -0.079612 0.415361
+#> 3         0.1     0.248816 0.124234 0.022600  0.005317 0.492315
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS",id=id,index = 1)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.1     2.400826 0.097163 0.000000  2.210387 2.591265
+#> 2         0.1     0.134126 0.116797 0.125409 -0.094797 0.363049
+#> 3         0.1     0.240651 0.115571 0.018658  0.014133 0.467169
 ```
 
 
