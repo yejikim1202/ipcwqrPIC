@@ -94,7 +94,7 @@ NULL
 #'
 #'
 
-picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
+picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
   
   library(extRemes)
   library(MASS)
