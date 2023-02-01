@@ -144,8 +144,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     ker = dnorm(outer(x[,1],x[,1],"-")/h)
     Wnj = ker / rowSums(ker)
     sr = sl = srl= rep(0,n)
-    denomr = rowSums(outer(y,y,"<=")*(Wnj))
-    denoml = rowSums(outer(y,y,">=")*(Wnj))
+    denomr = rowSums(outer(y,y,">=")*(Wnj))
+    denoml = rowSums(outer(y,y,"<=")*(Wnj))
     for (i in 1:n) {
       if(delta[i]==1){
         y0 = y[i]
@@ -222,17 +222,17 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
         indr=Y>=Y[i]
         dNir = Y<=Y[i]
         resr = as.numeric((Y - xx%*%beta)*indr)
-        indr = ifelse(resr<=0,1,0)
+        ind2 = ifelse(resr<=0,1,0)
         dMr=dNir-( (yind/denom) *dNir)
-        Rft=(t(xx*wr*dMr*indr*eta)%*%( indr - tau ))
+        Rft=(t(xx*wr*dMr*indr*eta)%*%( ind2 - tau ))
         UR=UR+((Rft/n))
         
         indl=Y<=Y[i]
         dNil = Y>=Y[i]
         resl = as.numeric((Y - xx%*%beta)*indl)
-        indl = ifelse(resl<=0,1,0)
+        ind3 = ifelse(resl<=0,1,0)
         dMl=dNil-( ((1-yind)/(n+1-denom)) *dNil)
-        Lft=(t(xx*wl*dMl*indl *eta)%*%( indl - tau ))
+        Lft=(t(xx*wl*dMl*indl *eta)%*%( ind3 - tau ))
         UL=UL+((Lft/n))
       }
     }
