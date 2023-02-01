@@ -1,4 +1,4 @@
-#' @importFrom stats as.formula binomial lm predict sd
+#' @importFrom stats as.formula binomial predict sd
 NULL
 #' Fit the partly interval-censored AFT model with quantile regressions
 #'
@@ -9,14 +9,14 @@ NULL
 #' @param delta censoring indicator, 1: observed; 0: interval-censored.
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
-#' @param estimation estimating method of partly interval censored, default is "NULL" and if estimation="dr", doubly robust estimator is estimated.
-#' @param var.estimation estimating method of variance, if var.estimation="IS", induced smoothing method is used, else if var.estimation="bootstrap", bootstrap estimating method of Zeng and Lin is used.
-#' @param wttype weight estimating method, default is "param", Beran's nonparametric KM estimating method as "Beran", and Ishwaran's nonparametric survival random forests estimating method as "Ishwaran"
-#' @param hlimit bandwidth value, set \code{hlimit=NULL}.
+#' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
+#' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
+#' @param wttype weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
+#' @param hlimit bandwidth value, default is NULL.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
-#' @param index index of cluster weight.
-#' @param maxit maximum number of iteration for the IPCW method estimator, default is 100.
-#' @param tol tolerance of iteration for the IPCW method estimator, default is 1e-3.
+#' @param index index of cluster weight, default is 1
+#' @param maxit maximum number of iteration for the log-rank estimator, default is 100.
+#' @param tol tolerance of iteration for the log-rank estimator, default is 1e-3.
 #'
 #' @return \code{picrq} returns a data frame containing at least the following components:
 #' \itemize{
@@ -36,16 +36,15 @@ NULL
 #' 
 #' Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
 #' 
-#' Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-dependent covariates. Biostatistics. 18 (1), 132–146.
+#' Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time- dependent covariates. Biostatistics. 18 (1), 132–146.
 #' 
 #' Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
 #' 
 #' Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
 #' 
-#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
-#' 
 #' Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
-#'
+#' 
+#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). Inverse weighted quantile regression with partially interval-censored data.
 #'
 #' @examples
 #' \dontrun{
@@ -62,9 +61,9 @@ NULL
 #' V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 #' delta = ifelse(U==V, 1, 0)
 #' tau=0.3
-#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS")
-#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Beran",hlimit=0.1,var.estimation="IS")
-#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,wttype = "Ishwaran",var.estimation="IS")
+#' picrq(L=V,R=U,delta=delta,x=x,tau=tau)
+#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "dr")
+#' 
 #' 
 #' # Data example
 #' library(PICBayes)
@@ -85,9 +84,11 @@ NULL
 #'L=d$U;R=d$V; delta=d$delta
 #'L=(log(d$U));R=log(d$V); delta=d$delta
 #'x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-#'picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="IS")
-#'picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype="param",var.estimation="bootstrap")
-#'picrq(L,R,delta,x=x,tau=tau,id=id,index=1,wttype = "Beran",hlimit = 0.9,var.estimation="bootstrap")
+#'picrq(L,R,delta,x=x,tau=tau)
+#'picrq(L,R,delta,x=x,tau=tau,hlimit=0.9)
+#'picrq(L,R,delta,x=x,tau=tau,estimation = "dr")
+#'picrq(L,R,delta,x=x,tau=tau,id=id)
+#'picrq(L,R,delta,x=x,tau=tau,id=id,index = 2)
 #' }
 #' @export
 #'
@@ -103,10 +104,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   library(extRemes)
   library(quantreg)
   
-  
   wtpicft=function(L,R,delta){
     
-    L = pmax(L,1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
     kml = survfit(Surv(L) ~ 1)
     kmr = survfit(Surv(R) ~ 1)
     ww = rep(0,n)
@@ -124,7 +124,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   
   Rwtpicft=function(L,R,delta){
     
-    L = pmax(L,1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
     kml = survfit(Surv(L) ~ 1)
     kmr = survfit(Surv(R) ~ 1)
     ww = rep(0,n)
@@ -140,7 +140,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   }
   
   Berwtpicfunc = function(L,R,x,delta, h=NULL) {
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); y=Y
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(L); y=Y
     ker = dnorm(outer(x[,1],x[,1],"-")/h)
     Wnj = ker / rowSums(ker)
     sr = sl = srl= rep(0,n)
@@ -149,20 +149,21 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     for (i in 1:n) {
       if(delta[i]==1){
         y0 = y[i]
-        etar = 1*(y<=y0 & delta==0)
         etal = 1*(y>=y0 & delta==0)
+        etar = 1*(y<=y0 & delta==0)
         nom = Wnj[,i]
         sr = prod((1 - nom/denomr)^etar)
         sl = 1-prod((1 - nom/denoml)^etal)
         srl[i] = 1/pmax(1-(sr-sl),0.001)
       }
     }
+    srl[is.na(srl)]=0
     srl
   }
   
   Ishrfwtpicfunc = function(L,R,x,delta) {
     library(randomForestSRC)
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y);
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     statusl=ifelse(delta==0,0,1)
     statusr=ifelse(delta==0,0,1)
     dt=data.frame(L=L,R=R,statusl=statusl,statusr=statusr)
@@ -188,12 +189,12 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
   }
   
   PICrq=function(L,R,x,delta,tau,ww,eta){
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     rq((Y)~x, weights = ww*eta, tau = tau)$coef #int, beta1, beta2
   }
   
   Efunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y);
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -202,41 +203,44 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     U/cluster
   }
   
-  
-  DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8);
-    wl=(ww+wr)/(ww*wr); wl[is.nan(wl)]=0
-    n=length(Y); nrl=sum(ifelse(delta==0,1,0));
+  DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
+    wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
-    Phi = as.vector( pnorm( -res/ss ) * ww )
     U = as.vector( t(xx *eta)%*%(wwind - tau) )
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
     
     for (i in 1:n) {
+      yind=Y>=Y[i]
+      denom=sum(yind*eta ) 
       if(delta[i]==0){
-        yindr=Y>=Y[i]
-        denomr=sum(yindr*eta )*nrl
-        Rft = as.vector( t(xx * eta *wr)%*%(as.numeric(( (yindr*eta*ind)-tau) *ind)) )
-        UR=UR+(Rft/denomr)
-      }
-      if(delta[i]==0){
-        yindl=Y<=Y[i]
-        denoml=(sum((1-yindl) * eta )+1)*nrl
-        Lft = as.vector( t(xx * eta*wl )%*%(as.numeric(( ((1-yindl)*eta*ind)-tau) *ind )) )
-        UL=UL+((Lft/denoml))
+        indr=Y>=Y[i]
+        dNir = Y<=Y[i]
+        resr = as.numeric((Y - xx%*%beta)*indr)
+        indr = ifelse(resr<=0,1,0)
+        dMr=dNir-( (yind/denom) *dNir)
+        Rft=(t(xx*wr*dMr*indr*eta)%*%( indr - tau ))
+        UR=UR+((Rft/n))
+        
+        indl=Y<=Y[i]
+        dNil = Y>=Y[i]
+        resl = as.numeric((Y - xx%*%beta)*indl)
+        indl = ifelse(resl<=0,1,0)
+        dMl=dNil-( ((1-yind)/(n+1-denom)) *dNil)
+        Lft=(t(xx*wl*dMl*indl *eta)%*%( indl - tau ))
+        UL=UL+((Lft/n))
       }
     }
-    (U+(UR/nrl)+(UL/nrl))/(cluster)
+    (U+(UR)+(UL))/(cluster)
   }
   
-  
   Afunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y);
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     exactnum=sum(ifelse(delta==1,1,0))
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
@@ -248,47 +252,50 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     A/cluster
   }
   
+  
   Gfunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
+    ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
-    
-    Gam=xx*as.numeric(wwind-tau)
+    Gam=(xx)*as.numeric(wwind-tau)
     Gamma=( t(Gam)%*%(Gam*eta) )
     GammaR=matrix(0,p,p)
     GammaL=matrix(0,p,p)
     
     for(i in 1:n){
+      yind=Y>=Y[i]
+      denom=sum(yind *eta) 
       if(delta[i]==0){
-        yindr=Y>=Y[i]
-        denomr=sum(yindr*eta)
-        nom=as.vector( t(xx*eta)%*% (yindr*wwind*eta) )
-        R = nom/denomr
-        GammaR=GammaR+(R)%*%t(R)
+        dNir = (Y<=Y[i])*eta
+        Br=t(xx)%*%(yind*wwind)
+        Br2=t(xx*eta)%*%(yind*wwind*dNir)
+        R = (Br)/(denom)
+        R2 = (Br2)/(denom)
+        GammaR=GammaR+(R)%*%t(R2)
         
-        yindl=Y<=Y[i]
-        denoml=sum((1-yindl) * eta)+1
-        nom=as.vector( t(xx*eta)%*% ((1-yindl)*wwind*eta) )
-        L = nom/denoml
-        GammaL=GammaL+(L)%*%t(L)
+        dNil = (Y>=Y[i])*eta
+        Bl=t(xx)%*%((1-yind)*wwind)
+        Bl2=t(xx*eta)%*%((1-yind)*wwind*dNil)
+        L = (Bl)/((n+1-denom))
+        L2 = (Bl2)/((n+1-denom))
+        GammaL=GammaL+(L)%*%t(L2)
       }
     }
     (Gamma-GammaR+GammaL)/cluster
   }
   
-  # # # update 'Gamma' matrix in sandwich variance (Zeng and Lin, 2008)
   Gfunc2 = function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma,B=100) {
-    n=length(L); cennum=sum(ifelse(delta==1,1,0))
+    n=length(L);
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
       Efunc(L=L[id],R=R[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Sigma = cov(Shat) * (cluster)
-    Sigma
+    Var = cov(Shat) * (cluster)
+    Var
   }
   
   Gfunc3= function(L,R,x,delta,tau,ww,eta,id,cluster,beta,Sigma,B=100) {
@@ -299,8 +306,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Sigma = cov(Shat) * (cluster)
-    Sigma
+    Var = cov(Shat) * (cluster)
+    Var
   }
   
   # update variance estimator
@@ -308,17 +315,16 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     n=length(Y)
     invA = solve(Afunc)
     newSigma = (( (invA) %*% Gfunc %*% (invA) ) )
-    newSigma/cluster
+    newSigma/n
   }
   
-  L = pmax(L,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
+  L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
   if(is.null(id)){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
-  
   if(wttype=="param"){ww=wtpicft(L=L,R=R,delta=delta);}
-  else if(wttype=="Ishwaran" & n==sum(delta==1)){print("Use parametric weight estimating method (wttype=param)."); ww=NULL}
+  else if(wttype=="Ishwaran" & n==sum(delta==1)){print("Use another weight estimating method.")}
   else if(wttype=="Ishwaran"){ww=Ishrfwtpicfunc(L=L,R=R,delta=delta,x=x);}
-  else if(wttype=="Beran" & n==sum(delta==1)){print("Use parametric weight estimating method (wttype=param)."); ww=NULL}
+  else if(wttype=="Beran" & n==sum(delta==1)){print("Use another weight estimating method.")}
   else if(wttype=="Beran" & is.null(hlimit)==F){ww=Berwtpicfunc(L=L,R=R,delta=delta,x=x,h=hlimit);}
   xx = as.matrix(cbind(1,x)); p = ncol(xx)
   old_beta = init = beta = PICrq(L=L,R=R,delta=delta,x=x,ww=ww,eta=eta,tau=tau)
@@ -330,20 +336,17 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="param
     if(is.null(estimation)){
       new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/(n)
     }
-    else if(estimation=="dr"){
+    else if(estimation=="DR"){
       wr=Rwtpicft(L=L,R=R,delta=delta)
       new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/(n)
     }
-    if(var.estimation=="IS" & is.null(id)==F){
-      print("Use another variance estimating method (var.estimation=bootstrap)."); Gamma=NULL
-    }
-    else if(var.estimation=="IS"){
+    if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    else if(var.estimation=="bootstrap" & is.null(id)){
+    else if(var.estimation=="Bootstrap" & is.null(id)){
       Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    else if(var.estimation=="bootstrap"){
+    else if(var.estimation=="Bootstrap"){
       Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
