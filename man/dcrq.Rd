@@ -2,7 +2,7 @@
 % Please edit documentation in R/dcrq.R
 \name{dcrq}
 \alias{dcrq}
-\title{Fit the doubly interval-censored AFT model with quantile regression}
+\title{Fit the doubly interval-censored AFT model with quantile regression model}
 \usage{
 dcrq(
   L,
@@ -13,7 +13,7 @@ dcrq(
   tau,
   estimation = NULL,
   var.estimation = NULL,
-  wttype = "param",
+  wttype = "Param",
   hlimit = NULL,
   id = NULL,
   index = 1,
@@ -34,28 +34,28 @@ dcrq(
 
 \item{tau}{quantile level.}
 
-\item{estimation}{estimating method of partly interval censored, default is "NULL" and if estimation="dr", doubly robust estimator is estimated.}
+\item{estimation}{estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.}
 
-\item{var.estimation}{estimating method of variance, if var.estimation="IS", induced smoothing method is used, else if var.estimation="bootstrap", bootstrap estimating method of Zeng and Lin is used.}
+\item{var.estimation}{variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.}
 
-\item{wttype}{weight estimating method, default is "param", Beran's nonparametric KM estimating method as "Beran", and Ishwaran's nonparametric survival random forests estimating method as "Ishwaran"}
+\item{wttype}{weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
-\item{hlimit}{bandwidth value, set \code{hlimit=NULL}.}
+\item{hlimit}{bandwidth value, default is NULL.}
 
 \item{id}{cluster id. If the data does not have clustered structure, set \code{id=NULL}.}
 
-\item{index}{index of cluster weight.}
+\item{index}{index of cluster weight, default is 1}
 
-\item{maxit}{maximum number of iteration for the IPCW method estimator, default is 100.}
+\item{maxit}{maximum number of iteration for the log-rank estimator, default is 100.}
 
-\item{tol}{tolerance of iteration for the IPCW method estimator, default is 1e-3.}
+\item{tol}{tolerance of iteration for the log-rank estimator, default is 1e-3.}
 }
 \value{
 \code{dcrq} returns a data frame containing at least the following components:
 \itemize{
 \item \code{tau}: quantile level.
 \item \code{coefficients}: regression estimator.
-\item \code{se}: standard error estimates for \code{coefficients}.
+\item \code{se}: standard error estimates for \code{est}.
 \item \code{pvalue}: p-value.
 \item \code{lower bd}: lower bound of coefficients under 95\% confidence level.
 \item \code{upper bd}: upper bound of coefficients under 95\% confidence level.
@@ -65,12 +65,11 @@ dcrq(
 Fit inverse weighted quantile regression with doubly interval-censored data
 }
 \details{
-see Kim et al., (2023+) for detailed method explanation.
+see Kim et al., (2022+) for detailed method explanation.
 }
 \examples{
 \dontrun{
 # Simulations
-library(tidyverse)
 n=200; x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
 T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
 L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
@@ -81,10 +80,10 @@ delta=case_when(
  TRUE ~ 1 #observed
 )
 L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
-dcrq(L,R,T,delta,x,tau,wttype="param",var.estimation="IS")
-dcrq(L,R,T,delta,x,tau,wttype="param",estimation = "dr",var.estimation="IS")
-dcrq(L,R,T,delta,x,tau,wttype = "Beran",hlimit = 0.9,var.estimation="IS")
-dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran",var.estimation="IS")
+dcrq(L,R,T,delta,x,tau)
+dcrq(L,R,T,delta,x,tau,estimation = "dr")
+dcrq(L,R,T,delta,x,tau,wttype = "nonparam")
+dcrq(L,R,T,delta,x,tau,wttype = "nonparam",hlimit = 0.9)
 }
 }
 \references{
@@ -92,13 +91,13 @@ Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data.
 
 Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
 
-Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-dependent covariates. Biostatistics. 18 (1), 132–146.
+Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time- dependent covariates. Biostatistics. 18 (1), 132–146.
 
 Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
 
 Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
 
-Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
-
 Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
+
+Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). Inverse weighted quantile regression with partially interval-censored data.
 }
