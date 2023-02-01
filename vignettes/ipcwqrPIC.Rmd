@@ -61,7 +61,7 @@ picrq() function has the following arguments:
 picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation = "IS")
 ```
 
-drq() function has the following arguments:
+dcrq() function has the following arguments:
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
 dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "IS")
 ```
@@ -74,42 +74,43 @@ We first simulate univariate partly interval-censored (PIC) data with normal ran
 library(ipcwqrPIC)
 set.seed(111)
 n = 200
-tau=0.1
-x1=runif(n,-0.1,1.5); x2=rbinom(n,1,0.6)
-T = 1+x1+x2+(rnorm(n)-qnorm(tau))*(1.1-0.05*x2)
+x1 = runif(n,-1,1)
+x2 = rbinom(n,1,0.43)
 x = cbind(x1,x2)
+T = 2 + x1 + x2 + rnorm(n)
 U = (1 - 0.25*x1)*runif(n, -6, 5)
 V = U + (1 - 0.1*x2)*runif(n, 6, 20)
 U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
 V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 delta = ifelse(U==V, 1, 0)
 tau=0.3
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS")
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="param",var.estimation="bootstrap")
+ipcwqrPIC::picrq(L=V,R=U,delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS")
 ```
 
-We posit two estimating methods, ipcw estimating method and doubly robust ipcw estimating method, which can be conducted by specifying estimation = NULL and estimation = "dr", respectively.
+We posit two estimating methods, ipcw estimating method and doubly robust ipcw estimating method, which can be conducted by specifying estimation = NULL and estimation = "DR", respectively.
 
 Next, we simulate univariate doubly-censored (DC) data with normal random error, which is one of DC data simulation setting of Kim et al. (2023+).
 
 ```{r message=FALSE, warning=FALSE}
-n=200; tau=0.3
+n=200; 
 x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
 T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
-L=runif(n,-2.8,2); R=L+runif(n,4.2,8)
-x=cbind(x1,x2)
+L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+Y=pmin(R,pmax(T,L))
 delta=case_when(
-    T<L ~ 3,
-    T>R ~ 2,
-    TRUE ~ 1 #observed
-  )
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS")
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="param",estimation = "dr",var.estimation="IS")
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Beran",hlimit = 0.9,var.estimation="IS")
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Ishwaran",var.estimation="IS")
+ T<L ~ 3,
+ T>R ~ 2,
+ TRUE ~ 1 #observed
+)
+L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
+ipcwqrPIC::dcrq(L,R,T,delta,x,tau,var.estimation = "IS")
+ipcwqrPIC::dcrq(L,R,T,delta,x,tau,estimation = "DR", var.estimation = "IS")
+ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Beran", hlimit = 0.9, var.estimation = "IS")
+ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran", var.estimation = "IS")
 ```
 
-We can choose one of two weighting types, the parametric KM estimating method, Beran's nonparametric KM estimating method, and Ishwaran's nonparametric survival random forests estimating method which can be accessible by using wttype="param", wttype="Beran" and wttype="Ishwaran", respectively.
+We can choose one of three weighting types, the parametric KM estimating method, Beran's nonparametric KM estimating method, and Ishwaran's nonparametric survival random forests estimating method which can be accessible by using wttype="param", wttype="Beran" and wttype="Ishwaran", respectively.
 
 Finally, we cover multivariate doubly-censored (MVDC) data with normal random error, which is one of MVDC data simulation setting of Kim et al. (2023+).
 
@@ -133,8 +134,8 @@ delta=case_when(
     T>R ~ 2,
     TRUE ~ 1 #observed
   )
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS",id=NULL)
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="param",var.estimation="IS",id=id,index = 1)
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="Param",var.estimation="IS",id=NULL)
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="Param",var.estimation="IS",id=id,index = 1)
 ```
 
 In real data analysis, we apply our proposed method to the multivariate clustered PIC data using a phase 3 metastatic colorectal cancer clinical trial. This dataset is accessible for data(mCRC) in the PICBayes R package (Pan, 2021).
@@ -155,14 +156,12 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       delta = case_when(IC == 0 ~ 1,
                                                         IC == 1 ~ 0)
 ));
-L=d$U;R=d$V; delta=d$delta
 L=(log(d$U));R=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS")
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",wttype="Beran",hlimit=0.9)
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="IS",estimation = "dr")
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id)
-ipcwqrPIC::picrq(L=L,R=R,delta=delta,x=x,tau=tau,var.estimation="bootstrap",id=id,wttype = "Beran",hlimit = 0.9)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS",id=id,index = 1)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.9,var.estimation = "IS",id=id,index = 1)
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS",id=id,index = 1)
 ```
 
 
