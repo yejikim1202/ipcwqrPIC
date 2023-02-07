@@ -29,7 +29,7 @@ NULL
 #' }
 #'
 #' @details
-#' see Kim et al., (2022+) for detailed method explanation.
+#' see Kim et al., (2023+) for detailed method explanation.
 #'
 #' @references
 #' Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data. Technical Report, Univ.California, Berkeley.
@@ -44,7 +44,7 @@ NULL
 #' 
 #' Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
 #' 
-#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). Inverse weighted quantile regression with partially interval-censored data.
+#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
 #'
 #' @examples
 #' \dontrun{
@@ -62,7 +62,7 @@ NULL
 #' delta = ifelse(U==V, 1, 0)
 #' tau=0.3
 #' picrq(L=V,R=U,delta=delta,x=x,tau=tau)
-#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "dr")
+#' picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "DR")
 #' 
 #' 
 #' # Data example
@@ -85,10 +85,9 @@ NULL
 #'L=(log(d$U));R=log(d$V); delta=d$delta
 #'x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
 #'picrq(L,R,delta,x=x,tau=tau)
-#'picrq(L,R,delta,x=x,tau=tau,hlimit=0.9)
-#'picrq(L,R,delta,x=x,tau=tau,estimation = "dr")
-#'picrq(L,R,delta,x=x,tau=tau,id=id)
-#'picrq(L,R,delta,x=x,tau=tau,id=id,index = 2)
+#'picrq(L,R,delta,x=x,tau=tau,hlimit=0.1,wttype="Beran")
+#'picrq(L,R,delta,x=x,tau=tau,estimation = "DR")
+#'picrq(L,R,delta,x=x,tau=tau,id=id,index = 1)
 #' }
 #' @export
 #'
