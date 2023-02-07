@@ -77,10 +77,6 @@ ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS",i
 
 * Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
 
-* Chiou, S. H., Kang, S. and Yan, J. (2015). 
-Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach.
-Statistics in Medicine 34(9): 1495–-1510.
-
 * Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time-
 dependent covariates. Biostatistics. 18 (1), 132–146.
 
