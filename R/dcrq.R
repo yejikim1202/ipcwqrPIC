@@ -182,7 +182,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     U/cluster
   }
   
-  Efunc2=function(L,R,x,delta,tau,ww,eta,cluster,beta){
+  Efunc2=function(L,R,T,x,delta,tau,ww,eta,cluster,beta){
     L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     res = as.numeric(Y - xx%*%beta)
@@ -338,7 +338,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     }
     else if(var.estimation=="Bootstrap" & is.null(id)){
       new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
-      new_Sigma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_Sigma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)==F){
       new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par

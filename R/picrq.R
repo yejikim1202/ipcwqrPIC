@@ -367,11 +367,11 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
       new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)){
-      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
       new_Sigma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)==F){
-      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
       new_Sigma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     if (det(new_Sigma) <= 0) {
