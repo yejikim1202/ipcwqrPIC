@@ -372,7 +372,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
     }
     else if(var.estimation=="Bootstrap" & is.null(id)==F){
       new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
-      new_Sigma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_Sigma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     if (det(new_Sigma) <= 0) {
       new_beta = old_beta; new_Sigma = old_Sigma
