@@ -202,6 +202,18 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
     U/cluster
   }
   
+  
+  Efunc2=function(L,R,x,delta,tau,ww,eta,cluster,beta){
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
+    xx=as.matrix(cbind(1,x)); p=ncol(xx)
+    res = as.numeric(Y - xx%*%beta)
+    ind = ifelse(res<=0,1,0)
+    wwind = ww*ind
+    U = as.vector( t(xx *eta*ww)%*%(ind  - tau) )
+    U/cluster
+  }
+  
+  
   DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
@@ -291,22 +303,33 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
-      Efunc(L=L[id],R=R[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
+      Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Var = cov(Shat) * (cluster)
-    Var
+    Var = cov(Shat*n)
+    solve(Var)
   }
   
   Gfunc3= function(L,R,x,delta,tau,ww,eta,id,cluster,beta,Sigma,B=100) {
     n=length(L)
-    library(MASS)
-    Shat = t(replicate(B,{
-      tabid=as.vector(table(id))
-      idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
-      Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
-    }))
-    Var = cov(Shat) * (cluster)
-    Var
+    # tabid=as.vector(table(id))
+    # idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
+    df=data.frame(num=1:n, id=id, L=L, R=R, ww=ww, x=x, eta=eta, delta=delta)
+    len=length(unique(df$id))
+    uniqid=unique(df$id)
+    Shat2=matrix(0,ncol = 3,nrow = 1)
+    for (i in 1:len) {
+      df2 = subset(df,id==uniqid[i])
+      library(MASS)
+      Shat = t(replicate(B,{
+        ndf2=nrow(df2)
+        newx=as.matrix(cbind(df2$x.1,df2$x.2))
+        idx = sample(ndf2,ndf2,replace = TRUE)
+        Efunc(L=df2$L[idx],R=df2$R[idx],x=newx[idx,],delta=df2$delta[idx],tau=tau,ww=df2$ww[idx],eta=df2$eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
+      }))
+      Shat2=rbind(Shat2,(Shat))
+    }
+    Var = cov(Shat2*n)
+    solve(Var)/sqrt(cluster)
   }
   
   # update variance estimator
@@ -341,14 +364,16 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
     }
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)){
-      Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_Sigma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    else if(var.estimation=="Bootstrap"){
-      Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+    else if(var.estimation=="Bootstrap" & is.null(id)==F){
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_Sigma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     if (det(new_Sigma) <= 0) {
       new_beta = old_beta; new_Sigma = old_Sigma
     }

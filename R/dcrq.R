@@ -182,6 +182,16 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     U/cluster
   }
   
+  Efunc2=function(L,R,x,delta,tau,ww,eta,cluster,beta){
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
+    xx=as.matrix(cbind(1,x)); p=ncol(xx)
+    res = as.numeric(Y - xx%*%beta)
+    ind = ifelse(res<=0,1,0)
+    wwind = ww*ind
+    U = as.vector( t(xx *eta*ww)%*%(ind  - tau) )
+    U/cluster
+  }
+  
   DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
     wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
@@ -276,7 +286,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
       id = sample(n,n,replace = TRUE)
       Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Var = cov(Shat) * (cluster)
+    Var = cov(Shat*n)
     Var
   }
   
@@ -288,8 +298,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Var = cov(Shat) * (cluster)
-    Var
+    Var = cov(Shat*n)
+    Var/sqrt(cluster)
   }
   
   # update variance estimator
@@ -324,12 +334,16 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     }
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)){
-      Gamma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_Sigma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    else if(var.estimation=="Bootstrap" & is.null(id)==F){Gamma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)}
-    new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
+    else if(var.estimation=="Bootstrap" & is.null(id)==F){
+      new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
+      new_Sigma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+    }
     
     if (det(new_Sigma) <= 0) {
       new_beta = old_beta; new_Sigma = old_Sigma
