@@ -47,26 +47,16 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
 ));
 L=(log(d$U));R=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS")
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.548123 0.115091 0.000000  2.322544 2.773702
-#> 2         0.1     0.170877 0.151378 0.129488 -0.125823 0.467577
-#> 3         0.1     0.240066 0.149144 0.053739 -0.052256 0.532387
 ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.549014 0.096420 0.000000  2.360030 2.737998
-#> 2         0.1     0.167647 0.125468 0.090746 -0.078270 0.413563
-#> 3         0.1     0.248939 0.123488 0.021905  0.006903 0.490975
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.9,var.estimation = "IS",id=id,index = 1)
+#> Intercept 0.1     2.397868 0.312826 0.000000  1.784730 3.011007
+#> 2         0.1     0.133565 0.468128 0.387700 -0.783965 1.051096
+#> 3         0.1     0.241264 0.438257 0.290985 -0.617719 1.100247
+ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.548473 0.096867 0.000000  2.358614 2.738332
-#> 2         0.1     0.167874 0.126269 0.091841 -0.079612 0.415361
-#> 3         0.1     0.248816 0.124234 0.022600  0.005317 0.492315
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS",id=id,index = 1)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.400826 0.097163 0.000000  2.210387 2.591265
-#> 2         0.1     0.134126 0.116797 0.125409 -0.094797 0.363049
-#> 3         0.1     0.240651 0.115571 0.018658  0.014133 0.467169
+#> Intercept 0.1     1.946196 0.474713 0.000021  1.015758 2.876634
+#> x1        0.1     0.133251 0.754543 0.429912 -1.345654 1.612156
+#> x2        0.1     0.692900 0.700507 0.161297 -0.680094 2.065894
 ```
 
 
