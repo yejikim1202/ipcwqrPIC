@@ -238,7 +238,6 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     res = as.numeric(Y - xx%*%beta)
     wwss=ww/ss
     phi = as.vector( dnorm( -res/ss )* (wwss))
-    if(exactnum< (0.2*n)){phi = pmax(phi,0.05)}
     A = t(phi * xx  *eta) %*% xx + diag(p)*0.05
     A/cluster
   }
@@ -326,7 +325,12 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
   while (i<max.iter & eps >= tol ) {
     Amat = Afunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
-      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      if(exactnum< (0.2*n)){
+        new_beta = c(old_beta) - solve(Amat)%*%Efunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta)/n
+      }
+      else{
+        new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      }
     }
     else if(estimation=="DR"){
       wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
