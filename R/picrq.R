@@ -253,7 +253,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   Afunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==0,R,L),1e-8); n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    exactnum=sum(ifelse(delta==1,1,0))
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     wwss=ww/ss
@@ -355,6 +354,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   while (i<max.iter & eps >= tol ) {
     Amat = Afunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
+      exactnum=sum(ifelse(delta==1,1,0))
       if(exactnum< (0.2*n)){
         new_beta = c(old_beta) - solve(Amat)%*%Efunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta)/(n)
       }
