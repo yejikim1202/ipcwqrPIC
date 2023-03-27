@@ -93,7 +93,6 @@ NULL
 #'
 #'
 
-
 picrq2=function(U,V,cen,x,tau,estimation=NULL,var.estimation=NULL,wttype="param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
   
   library(extRemes)
@@ -111,7 +110,7 @@ picrq2=function(U,V,cen,x,tau,estimation=NULL,var.estimation=NULL,wttype="param"
     ww = rep(0,n)
     
     for (i in 1:n) {
-      if(cen[i]==1){
+      if(cen[i]==3){
         sl=approx(c(0,kml$time,100),c(1,kml$surv,0), xout=U[i])$y
         sr=approx(c(0,kmr$time,100),c(1,kmr$surv,0), xout=V[i])$y
         ww[i] = 1/pmax((1-(sr-sl)),0.001)
