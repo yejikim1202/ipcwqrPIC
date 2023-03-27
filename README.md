@@ -42,21 +42,19 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
-                                      delta = case_when(IC == 0 ~ 1,
-                                                        IC == 1 ~ 0)
+                                      cen = y
 ));
-L=(log(d$U));R=log(d$V); delta=d$delta
-x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS",id=id,index = 1)
+U=(log(d$U));V=log(d$V); cen=d$cen; x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+picrq2(U=U,V=V,cen=cen,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     2.397868 0.312826 0.000000  1.784730 3.011007
-#> 2         0.1     0.133565 0.468128 0.387700 -0.783965 1.051096
-#> 3         0.1     0.241264 0.438257 0.290985 -0.617719 1.100247
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
+#> Intercept 0.1     1.947217 0.414428 0.000001  1.134938 2.759497
+#> x1        0.1     0.467878 0.739982 0.263601 -0.982487 1.918243
+#> x2        0.1     0.357387 0.576760 0.267746 -0.773064 1.487837
+picrq2(U=U,V=V,cen=cen,x=x,tau=tau,estimation = "DR",wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     1.946196 0.474713 0.000021  1.015758 2.876634
-#> x1        0.1     0.133251 0.754543 0.429912 -1.345654 1.612156
-#> x2        0.1     0.692900 0.700507 0.161297 -0.680094 2.065894
+#> Intercept 0.1     1.947217 0.410187 0.000001  1.143251 2.751184
+#> x1        0.1     0.467878 0.737851 0.263005 -0.978311 1.914067
+#> x2        0.1     0.357387 0.575904 0.267443 -0.771386 1.486159
 ```
 
 
