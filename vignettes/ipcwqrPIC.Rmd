@@ -84,8 +84,8 @@ U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
 V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 delta = ifelse(U==V, 1, 0)
 tau=0.3
-ipcwqrPIC::picrq(L=V,R=U,delta=delta,x=x,tau=tau,var.estimation = "IS")
-ipcwqrPIC::picrq(L=V,R=U,delta=delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS")
+ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS")
 ```
 
 We posit two estimating methods, ipcw estimating method and doubly robust ipcw estimating method, which can be conducted by specifying estimation = NULL and estimation = "DR", respectively.
@@ -140,6 +140,8 @@ ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="Param",var.estimatio
 
 In real data analysis, we apply our proposed method to the multivariate clustered PIC data using a phase 3 metastatic colorectal cancer clinical trial. This dataset is accessible for data(mCRC) in the PICBayes R package (Pan, 2021).
 
+Warning! If you use Beran's weighting, you should apply bootstrap estimation to variance estimating.
+
 ```{r message=FALSE, warning=FALSE}
 library(PICBayes)
 data("mCRC")
@@ -153,15 +155,11 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
-                                      delta = case_when(IC == 0 ~ 1,
-                                                        IC == 1 ~ 0)
+                                      cen = y
 ));
-L=(log(d$U));R=log(d$V); delta=d$delta
-x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS")
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,var.estimation = "IS",id=id,index = 1)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-ipcwqrPIC::picrq(L,R,delta,x=x,tau=tau,estimation = "DR",var.estimation = "IS",id=id,index = 1)
+U=(log(d$U));V=log(d$V); cen=d$cen; x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+picrq2(U=U,V=V,cen=cen,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
+picrq2(U=U,V=V,cen=cen,x=x,tau=tau,estimation = "DR",wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
 ```
 
 
