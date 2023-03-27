@@ -65,7 +65,7 @@ dcrq(
 Fit inverse weighted quantile regression with doubly interval-censored data
 }
 \details{
-see Kim et al., (2022+) for detailed method explanation.
+see Kim et al., (2023+) for detailed method explanation.
 }
 \examples{
 \dontrun{
@@ -81,9 +81,9 @@ delta=case_when(
 )
 L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
 dcrq(L,R,T,delta,x,tau)
-dcrq(L,R,T,delta,x,tau,estimation = "dr")
-dcrq(L,R,T,delta,x,tau,wttype = "nonparam")
-dcrq(L,R,T,delta,x,tau,wttype = "nonparam",hlimit = 0.9)
+dcrq(L,R,T,delta,x,tau,estimation = "DR")
+dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran")
+dcrq(L,R,T,delta,x,tau,wttype = "Beran",hlimit = 0.1)
 }
 }
 \references{
@@ -99,5 +99,5 @@ Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimatin
 
 Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
 
-Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2022+). Inverse weighted quantile regression with partially interval-censored data.
+Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
 }
