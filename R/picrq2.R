@@ -10,7 +10,7 @@ NULL
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
+#' @param var.estimation variance estimating method, if var.estimation="Bootstrap", variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is NULL.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
@@ -370,11 +370,6 @@ picrq2=function(U,V,cen,x,tau,estimation=NULL,var.estimation=NULL,wttype="param"
     else if(estimation=="DR"){
       wr=Vwtpicft(U=U,V=V,cen=cen)
       new_beta = c(old_beta) - solve(Amat)%*%DREfunc(U=U,V=V,x=x,cen=cen,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/(n)
-    }
-    if(var.estimation=="IS"){
-      new_beta = BB::dfsane(par=beta,fn=Efunc,U=U,V=V,x=x,cen=cen,tau=tau,ww=ww,eta=eta,cluster=cluster, Sigma = old_Sigma,control=list(trace=FALSE))$par
-      Gamma = Gfunc(U=U,V=V,x=x,cen=cen,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-      new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     }
     else if(var.estimation=="Bootstrap" & is.null(id)){
       new_beta = BB::dfsane(par=beta,fn=Efunc2,U=U,V=V,x=x,cen=cen,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
