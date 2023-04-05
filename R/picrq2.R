@@ -11,7 +11,7 @@ NULL
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
 #' @param var.estimation variance estimating method, if var.estimation="Bootstrap", variance bootstrapping method is used.
-#' @param wttype weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
+#' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is NULL.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
 #' @param index index of cluster weight, default is 1
@@ -352,7 +352,7 @@ picrq2=function(U,V,cen,x,tau,estimation=NULL,var.estimation=NULL,wttype="param"
   U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(cen==0,V,U),1e-8); n=length(Y); 
   if(is.null(id)){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
-  if(wttype=="Param"){ww=wtpicft(U=U,V=V,cen=cen);}
+  if(wttype=="KM"){ww=wtpicft(U=U,V=V,cen=cen);}
   else if(wttype=="Ishwaran" & n==sum(cen==3)){print("Use another weight estimating method.")}
   else if(wttype=="Ishwaran"){ww=Ishrfwtpicfunc(U=U,V=V,cen=cen,x=x);}
   else if(wttype=="Beran" & n==sum(cen==3)){print("Use another weight estimating method.")}
