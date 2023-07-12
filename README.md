@@ -1,6 +1,6 @@
 # Introduction to `ipcwqrPIC` R package
 
-
+```{r}
 ## Introduction
 `ipcwqrPIC` is the R package to fit a new inverse-probability censoring weighted (IPCW) estimating procedure for censored quantile regression when the data are partially interval-censored that include doubly-censored (DC) data and partly interval-censored (PIC) and possibly correlated within same cluster.
 Let $T$ and $X$ be the event time of interest and its related $p$-vector of covariates, respectively.
@@ -26,7 +26,7 @@ i.e., $T$ is left-censored if $L=0$ and right-censored if $R=\infty$.
 This R package `ipcwqrPIC` implements an inverse-probability censoring weighted (IPCW) procedure for censored quantile regression for (cluster-correlated) partially interval-censored data, which includes both double-censoring and partially interval-censoring.
 
 Vignettes is available in [here](http://htmlpreview.github.io/?https://github.com/YejiStat/ipcwqrPIC/blob/main/vignettes/ipcwqrPIC.html).
-
+```
 
 ## Usages 
 ```{r}
