@@ -42,19 +42,26 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
-                                      cen = y
+                                      y = y
 ));
-U=(log(d$U));V=log(d$V); cen=d$cen; x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-picrq2(U=U,V=V,cen=cen,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     1.947217 0.414428 0.000001  1.134938 2.759497
-#> x1        0.1     0.467878 0.739982 0.263601 -0.982487 1.918243
-#> x2        0.1     0.357387 0.576760 0.267746 -0.773064 1.487837
-picrq2(U=U,V=V,cen=cen,x=x,tau=tau,estimation = "DR",wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.1     1.947217 0.410187 0.000001  1.143251 2.751184
-#> x1        0.1     0.467878 0.737851 0.263005 -0.978311 1.914067
-#> x2        0.1     0.357387 0.575904 0.267443 -0.771386 1.486159
+delta=with(d,ifelse(y==3,1,
+             ifelse(y==2,2,
+                    ifelse(y==0,3,
+                           ifelse(y==1,4,5))))); table(delta)
+#> delta
+#>   1   2   3   4 
+#>  52 306 168 329
+U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "IS",id=id,index = 1)
+#>           tau coefficients       se   pvalue 95% lower bd 95% upper bd
+#> Intercept 0.1     2.804211 0.383723 0.000000     2.052113     3.556308
+#> 2         0.1     0.263078 0.401282 0.256043    -0.523434     1.049590
+#> 3         0.1     0.584659 0.402028 0.072935    -0.203316     1.372635
+ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,estimation = "DR",wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
+#>           tau coefficients       se   pvalue 95% lower bd 95% upper bd
+#> Intercept 0.1     3.019574 0.340938 0.000000     2.351336     3.687812
+#> 2         0.1     0.314682 0.420603 0.227179    -0.509700     1.139065
+#> 3         0.1     0.839834 0.283413 0.001522     0.284345     1.395324
 ```
 
 
