@@ -105,7 +105,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   
   wtpicft=function(U,V,delta){
     
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(U);
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     # kml = survfit(Surv(U,delta!=2,type="left")~1)
     # kmr = survfit(Surv(V,delta!=3) ~ 1)
     kml = survfit(Surv(-Y,delta==2)~1)
@@ -127,7 +127,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   
   Vwtpicft=function(U,V,delta){
     
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(U);
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     # kml = survfit(Surv(U,delta!=2,type="left")~1)
     # kmr = survfit(Surv(V,delta!=3) ~ 1)
     kml = survfit(Surv(-Y,delta==2)~1)
@@ -147,7 +147,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   }
   
   Berwtpicfunc = function(U,V,x,delta, h=NULL) {
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(U); y=Y
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U); y=Y
     ker = dnorm(outer(x[,1],x[,1],"-")/h) #x1: continuous variable
     Wnj = ker / rowSums(ker)
     sr = sl = srl= rep(0,n)
@@ -169,7 +169,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   }
   
   Ishrfwtpicfunc = function(U,V,x,delta) {
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     status=ifelse(delta==1,1,0)
     dt=data.frame(U=U,V=V,status=status)
     
@@ -194,12 +194,12 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   }
   
   PICrq=function(U,V,x,delta,tau,ww,eta){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     rq((Y)~x, weights = ww*eta, tau = tau)$coef #int, beta1, beta2
   }
   
   Efunc=function(U,V,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -210,7 +210,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   
   
   Efunc2=function(U,V,x,delta,tau,ww,eta,cluster,beta){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
@@ -221,7 +221,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   
   
   DREfunc=function(U,V,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     wl=(ww*wr)/(wr-ww*wr+ww); wl[is.nan(wl)]=0; n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
@@ -257,7 +257,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   }
   
   Afunc=function(U,V,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -269,7 +269,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
   
   
   Gfunc=function(U,V,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+    U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -345,7 +345,7 @@ picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param
     newSigma/n
   }
   
-  U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==0,V,U),1e-8); n=length(Y); 
+  U = pmax(U,1e-8); V = pmax(V,1e-8); Y=pmax(ifelse(delta==3,V,U),1e-8); n=length(U);
   if(is.null(id)){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
   if(wttype=="Param"){ww=wtpicft(U=U,V=V,delta=delta);}
