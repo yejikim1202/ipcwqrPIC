@@ -11,7 +11,7 @@ NULL
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
 #' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
-#' @param wttype weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
+#' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is NULL.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
 #' @param index index of cluster weight, default is 1
@@ -94,7 +94,7 @@ NULL
 #'
 #'
 
-picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
+picrq=function(U,V,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
   
   library(MASS)
   library(tidyverse)
