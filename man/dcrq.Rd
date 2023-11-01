@@ -13,11 +13,15 @@ dcrq(
   tau,
   estimation = NULL,
   var.estimation = NULL,
-  wttype = "Param",
+  wttype = "KM",
   hlimit = NULL,
+  contx1.pos = 1,
+  contx2.pos = 1,
   id = NULL,
   index = 1,
+  B = 100,
   maxit = 100,
+  max.iter = 100,
   tol = 0.001
 )
 }
@@ -38,17 +42,25 @@ dcrq(
 
 \item{var.estimation}{variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.}
 
-\item{wttype}{weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
+\item{wttype}{weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
 \item{hlimit}{bandwidth value, default is NULL.}
+
+\item{contx1.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
+
+\item{contx2.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
 
 \item{id}{cluster id. If the data does not have clustered structure, set \code{id=NULL}.}
 
 \item{index}{index of cluster weight, default is 1}
 
-\item{maxit}{maximum number of iteration for the log-rank estimator, default is 100.}
+\item{B}{the number of iterations in the bootstrap method., default is 100}
 
-\item{tol}{tolerance of iteration for the log-rank estimator, default is 1e-3.}
+\item{maxit}{maximum time value of event time T or L and R, default is 100.}
+
+\item{max.iter}{maximum number of iteration for the quantile regression estimator, default is 100.}
+
+\item{tol}{tolerance of iteration for the quantile regression estimator, default is 1e-3.}
 }
 \value{
 \code{dcrq} returns a data frame containing at least the following components:
