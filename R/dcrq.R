@@ -96,16 +96,16 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,1,0)
       deltaR = ifelse(delta==4|delta==2,1,0)
-      kml = survfit(Surv(-L,deltaL==1)~1)
-      kmr = survfit(Surv(R,deltaR==1)~1)
+      kml = survfit(Surv(-L,deltaL==0)~1)
+      kmr = survfit(Surv(R,deltaR==0)~1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
       deltaL = ifelse(delta==3,1,0)
       deltaR = ifelse(delta==2,1,0)
-      kml = survfit(Surv(-Y,deltaL==1)~1)
-      kmr = survfit(Surv(Y,deltaR==1)~1)
+      kml = survfit(Surv(-Y,deltaL==0)~1)
+      kmr = survfit(Surv(Y,deltaR==0)~1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
       #rc
