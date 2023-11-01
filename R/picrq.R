@@ -97,7 +97,7 @@ NULL
 #'
 #'
 
-picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,maxit=100,max.iter=100,tol=1e-3){
+picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol=1e-3){
   
   library(extRemes)
   library(MASS)
@@ -112,7 +112,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     
     if(sum(delta==4)!=0){ 
       #pic
-      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
       deltaL = ifelse(delta==3|delta==1,1,0)
       deltaR = ifelse(delta==3|delta==2,1,0)
       kml = survfit(Surv(L,deltaL==1) ~ 1)
@@ -176,7 +176,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
       
     }else if(sum(delta==4)!=0){ 
       #pic
-      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L); y=Y
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L); y=Y
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
@@ -255,7 +255,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     
     if(sum(delta==4)!=0){ 
       #pic
-      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,0,1)
       deltaR = ifelse(delta==4|delta==2,0,1)
       if(sum(deltaL)==length(deltaL)){
@@ -359,12 +359,12 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   }
   
   PICrq=function(L,R,x,delta,tau,ww,eta){
-    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     rq((Y)~x, weights = ww*eta, tau = tau)$coef #int, beta1, beta2
   }
   
   Efunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -374,7 +374,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   }
   
   DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
@@ -410,7 +410,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   }
   
   Afunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -422,7 +422,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   
   
   Gfunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+    L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -486,7 +486,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     newSigma/n
   }
   
-  L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+  L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
   if(is.null(id)){eta=rep(1,n); cluster=n}
   else if(index==0){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
@@ -532,4 +532,14 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   colnames(res)=c("tau","coefficients","se","pvalue","lower bd","upper bd")
   rownames(res)[1]="Intercept"
   round((res), 6) 
+}
+
+Etable=function(est,se,beta0){
+  bias=colMeans(est)-beta0
+  ase=apply(est, 2, sd)
+  ese=colMeans(se)
+  cpl=t( t(est)-1.96*t(se) < beta0 )
+  cpu=t( t(est)+1.96*t(se) > beta0 )
+  cp=colMeans( cpl*cpu )
+  (round(cbind(bias,ase,ese,cp), 3))
 }
