@@ -89,7 +89,6 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
   library(randomForestSRC)
   
   
-  
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
     if(sum(delta==4)!=0){ 
