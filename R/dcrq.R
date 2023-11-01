@@ -89,21 +89,22 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
   library(randomForestSRC)
   
   
+  
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
     if(sum(delta==4)!=0){ 
       #pic
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
-      deltaL = ifelse(delta==4|delta==3,0,1)
-      deltaR = ifelse(delta==4|delta==2,0,1)
+      deltaL = ifelse(delta==4|delta==3,1,0)
+      deltaR = ifelse(delta==4|delta==2,1,0)
       kml = survfit(Surv(-L,deltaL==1)~1)
       kmr = survfit(Surv(R,deltaR==1)~1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
-      deltaL = ifelse(delta==3,0,1)
-      deltaR = ifelse(delta==2,0,1)
+      deltaL = ifelse(delta==3,1,0)
+      deltaR = ifelse(delta==2,1,0)
       kml = survfit(Surv(-Y,deltaL==1)~1)
       kmr = survfit(Surv(Y,deltaR==1)~1)
       
@@ -164,20 +165,16 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y); y=Y
       deltaL = ifelse(delta==3,1,0)
       deltaR = ifelse(delta==2,1,0)
-      kml = survfit(Surv(-Y,deltaL==1)~1)
-      kmr = survfit(Surv(Y,deltaR==1)~1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
       #rc
       R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y); y=Y
       deltaR = ifelse(delta==2,1,0)
-      kmr = survfit(Surv(Y,deltaR==1)~1)
       
     }else if(sum(delta==3)!=0){ 
       #lc
       L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y); y=Y
       deltaL = ifelse(delta==3,1,0)
-      kml = survfit(Surv(-Y,deltaL==1)~1)
       
     }
     
@@ -236,7 +233,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     
     if(sum(delta==4)!=0){ 
       #pic
-      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
+      L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,0,1)
       deltaR = ifelse(delta==4|delta==2,0,1)
       dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
@@ -266,7 +263,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
-      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      kml.obj <- rfsrc(Surv(-L, statusl==1) ~ .-L-statusl-R-statusr, data=dt)
       # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
@@ -277,7 +274,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
-      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      kml.obj <- rfsrc(Surv(-L, statusl==1) ~ .-L-statusl-R-statusr, data=dt)
       # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
@@ -309,8 +306,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
           ww[i] = 1
           
         }else if(sum(delta==4)!=0){ 
-          sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
-          sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
+          sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=L[i])$y
+          sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=R[i])$y
           ww[i] = 1/pmax(1-(sr-sl),1e-3)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
