@@ -95,8 +95,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,3,1)
       deltaR = ifelse(delta==4|delta==2,3,1)
-      kml = survfit(Surv(L,deltaL) ~ 1)
-      kmr = survfit(Surv(R,deltaR) ~ 1)
+      kml = survfit(Surv(L,deltaL==3) ~ 1)
+      kmr = survfit(Surv(R,deltaR==3) ~ 1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
