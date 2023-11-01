@@ -88,21 +88,22 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
   library(glmnet)
   library(randomForestSRC)
   
+  
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
     if(sum(delta==4)!=0){ 
       #pic
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
-      deltaL = ifelse(delta==4|delta==3,3,1)
-      deltaR = ifelse(delta==4|delta==2,3,1)
-      kml = survfit(Surv(L,deltaL==1) ~ 1)
-      kmr = survfit(Surv(R,deltaR==1) ~ 1)
+      deltaL = ifelse(delta==4|delta==3,0,1)
+      deltaR = ifelse(delta==4|delta==2,0,1)
+      kml = survfit(Surv(-L,deltaL==1)~1)
+      kmr = survfit(Surv(R,deltaR==1)~1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
-      deltaL = ifelse(delta==3,1,0)
-      deltaR = ifelse(delta==2,1,0)
+      deltaL = ifelse(delta==3,0,1)
+      deltaR = ifelse(delta==2,0,1)
       kml = survfit(Surv(-Y,deltaL==1)~1)
       kmr = survfit(Surv(Y,deltaR==1)~1)
       
@@ -126,8 +127,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
         if(sum(delta==1)==n){
           ww[i] = 1
         }else if(sum(delta==4)!=0){ 
-          sl=approx(c(0,kml$time,maxit),c(1,kml$surv,0), xout=L[i])$y
-          sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
+          sl=approx(c(0,-kml$time,100),c(1,1-kml$surv,0), xout=L[i])$y
+          sr=approx(c(0,kmr$time,100),c(1,kmr$surv,0), xout=R[i])$y
           ww[i] = 1/pmax(1-(sr-sl), 1e-3)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & is.null(estimation)){
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
@@ -238,12 +239,6 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,0,1)
       deltaR = ifelse(delta==4|delta==2,0,1)
-      if(sum(deltaL)==length(deltaL)){
-        deltaL=ifelse(delta==1,0,1)
-      }
-      if(sum(deltaR)==length(deltaR)){
-        deltaR=ifelse(delta==1,0,1)
-      }
       dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
@@ -267,7 +262,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     }
     
     
-    if(sum(delta==1)==n){
+    if(sum(delta==0)==n){
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
