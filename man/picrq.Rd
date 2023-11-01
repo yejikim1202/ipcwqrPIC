@@ -18,6 +18,7 @@ picrq(
   contx2.pos = 1,
   id = NULL,
   index = 1,
+  B = 100,
   maxit = 100,
   max.iter = 100,
   tol = 0.001
@@ -48,13 +49,13 @@ picrq(
 
 \item{index}{index of cluster weight, default is 1}
 
+\item{B}{the number of iterations in the bootstrap method., default is 100}
+
 \item{maxit}{maximum time value of event time T or L and R, default is 100.}
 
 \item{max.iter}{maximum number of iteration for the quantile regression estimator, default is 100.}
 
 \item{tol}{tolerance of iteration for the quantile regression estimator, default is 1e-3.}
-
-\item{B}{the number of iterations in the bootstrap method., default is 100}
 }
 \value{
 \code{dcrq} returns a data frame containing at least the following components:
