@@ -29,7 +29,7 @@ Vignettes is available in [here](http://htmlpreview.github.io/?https://github.co
 
 
 ## Usages 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(PICBayes)
 data("mCRC")
 d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
@@ -43,25 +43,30 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
                                       y = y
-));
+)); table(d$y)
 delta=with(d,ifelse(y==3,1,
              ifelse(y==2,2,
-                    ifelse(y==0,3,
-                           ifelse(y==1,4,5))))); table(delta)
+                           ifelse(y==1,4,3)))); table(delta)
+#> 
+#>   0   1   2   3 
+#> 168 329 306  52
+delta=with(d,ifelse(y==3,1,
+             ifelse(y==2,2,
+                           ifelse(y==1,4,3)))); table(delta)
 #> delta
 #>   1   2   3   4 
 #>  52 306 168 329
-U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "IS",id=id,index = 1)
-#>           tau coefficients       se   pvalue 95% lower bd 95% upper bd
-#> Intercept 0.1     2.804211 0.383723 0.000000     2.052113     3.556308
-#> 2         0.1     0.263078 0.401282 0.256043    -0.523434     1.049590
-#> 3         0.1     0.584659 0.402028 0.072935    -0.203316     1.372635
-ipcwqrPIC::picrq(U=U,V=V,delta=delta,x=x,tau=tau,estimation = "DR",wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-#>           tau coefficients       se   pvalue 95% lower bd 95% upper bd
-#> Intercept 0.1     3.019574 0.340938 0.000000     2.351336     3.687812
-#> 2         0.1     0.314682 0.420603 0.227179    -0.509700     1.139065
-#> 3         0.1     0.839834 0.283413 0.001522     0.284345     1.395324
+U=log(d$U);V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
+#>           tau coefficients       se pvalue lower bd upper bd
+#> Intercept 0.1     3.016822 0.054982  0e+00 2.909057 3.124586
+#> 2         0.1     0.325708 0.072708  4e-06 0.183201 0.468215
+#> 3         0.1     0.858293 0.058552  0e+00 0.743531 0.973056
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Ishwaran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+#>           tau coefficients       se   pvalue lower bd upper bd
+#> Intercept 0.1     2.709042 0.060092 0.000000 2.591262 2.826822
+#> 2         0.1     0.340565 0.157744 0.015426 0.031387 0.649742
+#> 3         0.1     0.837340 0.154822 0.000000 0.533888 1.140791
 ```
 
 
@@ -85,4 +90,4 @@ https://CRAN.R-project.org/package=PICBayes.
 
 * Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). 
 Inverse weighted quantile regression with partially interval-censored data.
-*Submitted to SMMR*.
+*Submitted to BMJ*.
