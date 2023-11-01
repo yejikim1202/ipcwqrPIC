@@ -112,11 +112,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     
     if(sum(delta==4)!=0){ 
       #pic
-      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
-      deltaL = ifelse(delta==3|delta==1,1,0)
-      deltaR = ifelse(delta==3|delta==2,1,0)
-      kml = survfit(Surv(L,deltaL==1) ~ 1)
-      kmr = survfit(Surv(R,deltaR==1) ~ 1)
+      L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
+      kml = survfit(Surv(L) ~ 1)
+      kmr = survfit(Surv(R) ~ 1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
@@ -287,7 +285,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     }
     
     
-    if(sum(delta==0)==n){
+    if(sum(delta==1)==n){
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
