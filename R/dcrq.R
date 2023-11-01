@@ -12,12 +12,16 @@ NULL
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
 #' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
-#' @param wttype weight estimating method, default is "Param", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
+#' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is NULL.
+#' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
+#' @param contx2.pos position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
 #' @param index index of cluster weight, default is 1
-#' @param maxit maximum number of iteration for the log-rank estimator, default is 100.
-#' @param tol tolerance of iteration for the log-rank estimator, default is 1e-3.
+#' @param B the number of iterations in the bootstrap method., default is 100
+#' @param maxit maximum time value of event time T or L and R, default is 100.
+#' @param max.iter maximum number of iteration for the quantile regression estimator, default is 100.
+#' @param tol tolerance of iteration for the quantile regression estimator, default is 1e-3.
 #'
 #' @return \code{dcrq} returns a data frame containing at least the following components:
 #' \itemize{
@@ -49,7 +53,6 @@ NULL
 #' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
 #' 
 #'
-#'
 #' @examples
 #' \dontrun{
 #' # Simulations
@@ -74,90 +77,261 @@ NULL
 #'
 #'
 
-dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Param",hlimit=NULL,id=NULL,index=1,maxit=100,tol=1e-3){
+
+dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol=1e-3){
+  
   library(extRemes)
   library(MASS)
   library(tidyverse)
   library(survival)
-  library(extRemes)
   library(quantreg)
+  library(glmnet)
   library(randomForestSRC)
   
-  wtfunc=function(L,R,T,delta){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y);
-    kml = survfit(Surv(-Y,delta==3)~1)
-    kmr = survfit(Surv(Y,delta==2)~1)
-    ww = rep(0,n)
+  wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
+    if(sum(delta==4)!=0){ 
+      #pic
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+      deltaL = ifelse(delta==3|delta==1,1,0)
+      deltaR = ifelse(delta==3|delta==2,1,0)
+      kml = survfit(Surv(L,deltaL==1) ~ 1)
+      kmr = survfit(Surv(R,deltaR==1) ~ 1)
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      #dc
+      L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
+      deltaL = ifelse(delta==3,1,0)
+      deltaR = ifelse(delta==2,1,0)
+      kml = survfit(Surv(-Y,deltaL==1)~1)
+      kmr = survfit(Surv(Y,deltaR==1)~1)
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
+      #rc
+      R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y)
+      deltaR = ifelse(delta==2,1,0)
+      kmr = survfit(Surv(Y,deltaR==1)~1)
+      
+    }else if(sum(delta==3)!=0){ 
+      #lc
+      L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y)
+      deltaL = ifelse(delta==3,1,0)
+      kml = survfit(Surv(-Y,deltaL==1)~1)
+    }
+    
+    ww = rep(0,n)
     for (i in 1:n) {
       if(delta[i]==1){
-        sl = approx( c(0, -kml$time, 100), c(1,1-kml$surv,0), xout=Y[i])$y
-        sr = approx( c(0, kmr$time, 100), c(1, kmr$surv, 0), xout=Y[i])$y
-        ww[i] = 1/pmax( sr-sl, 1e-3)
+        
+        if(sum(delta==1)==n){
+          ww[i] = 1
+        }else if(sum(delta==4)!=0){ 
+          sl=approx(c(0,kml$time,maxit),c(1,kml$surv,0), xout=L[i])$y
+          sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
+          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+        }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & is.null(estimation)){
+          sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
+          sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
+          ww[i] = 1/pmax( sr-sl, 1e-3)
+        }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & estimation=="DR"){ 
+          sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
+          sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
+          ww[i] = 1/pmax( sr, 1e-3)
+        }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
+          sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
+          ww[i] = 1/pmax(sr, 1e-3)
+        }else if(sum(delta==3)!=0){ 
+          sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
+          ww[i] = 1/pmax(1-sl, 1e-3)
+        }
       }
     }
     ww
   }
   
-  
-  Rwtfunc=function(L,R,T,delta){
+  Berfunc = function(L,R,T=NULL,x,delta) {
     
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y);
-    n=length(Y);
-    kml = survfit(Surv(-Y,delta==3)~1)
-    kmr = survfit(Surv(Y,delta==2)~1)
-    wr = rep(0,n)
-    for (i in 1:n) {
-      if(delta[i]==1){
-        sl = approx( c(0, -kml$time, 100), c(1,1-kml$surv,0), xout=Y[i])$y
-        sr = approx( c(0, kmr$time, 100), c(1, kmr$surv, 0), xout=Y[i])$y
-        wr[i] = 1/pmax( sr, 1e-3)
-      }
+    if(sum(delta==1)==n){
+      Y=T; n=length(Y); y=Y
+      
+    }else if(sum(delta==4)!=0){ 
+      #pic
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L); y=Y
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      #dc
+      L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y); y=Y
+      deltaL = ifelse(delta==3,1,0)
+      deltaR = ifelse(delta==2,1,0)
+      kml = survfit(Surv(-Y,deltaL==1)~1)
+      kmr = survfit(Surv(Y,deltaR==1)~1)
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
+      #rc
+      R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y); y=Y
+      deltaR = ifelse(delta==2,1,0)
+      kmr = survfit(Surv(Y,deltaR==1)~1)
+      
+    }else if(sum(delta==3)!=0){ 
+      #lc
+      L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y); y=Y
+      deltaL = ifelse(delta==3,1,0)
+      kml = survfit(Surv(-Y,deltaL==1)~1)
+      
     }
-    wr
-  }
-  
-  
-  Berwtfunc = function(L,R,T,x,delta, h=NULL) {
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y); y=Y
-    ker = dnorm(outer(x[,1],x[,1],"-")/h)
+    
+    ker = dnorm(outer(x[,contx1.pos],x[,contx2.pos],"-")/hlimit)
     Wnj = ker / rowSums(ker)
-    sr = sl = srl= rep(0,n)
-    denomr = rowSums(outer(y,y,"<=")*(Wnj))
-    denoml = rowSums(outer(y,y,">=")*(Wnj))
+    if(sum(delta==4)!=0){
+      denomr = rowSums(outer(y,y,">=")*(Wnj))
+      denoml = rowSums(outer(y,y,"<=")*(Wnj))
+    }else{
+      denomr = rowSums(outer(y,y,"<=")*(Wnj))
+      denoml = rowSums(outer(y,y,">=")*(Wnj))
+    }
+    
+    sr = sl = ww= rep(0,n)
     for (i in 1:n) {
       if(delta[i]==1){
-        y0 = y[i]
-        etar = 1*(y<=y0 & delta==2)
-        etal = 1*(y>=y0 & delta==3)
-        nom = Wnj[,i]
-        sr = prod((1 - nom/denomr)^etar)
-        sl = 1-prod((1 - nom/denoml)^etal)
-        srl[i] = 1/pmax( sr-sl, 1e-3)
+        
+        y0 = y[i]; nom = Wnj[,i]
+        
+        if(sum(delta==1)==n){
+          ww[i] = 1
+        }else if(sum(delta==4)!=0){ 
+          etar = 1*(y<=y0 & delta!=1)
+          etal = 1*(y>=y0 & delta!=1)
+          sr = prod((1 - nom/denomr)^etar)
+          sl = 1-prod((1 - nom/denoml)^etal)
+          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+          
+        }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+          etar = 1*(y<=y0 & deltaR==1)
+          etal = 1*(y>=y0 & deltaL==1)
+          sr = prod((1 - nom/denomr)^etar)
+          sl = 1-prod((1 - nom/denoml)^etal)
+          ww[i] = 1/pmax( sr-sl, 1e-3)
+          
+        }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
+          etar = 1*(y<=y0 & deltaR==1)
+          sr = prod((1 - nom/denomr)^etar)
+          ww[i] = 1/pmax(sr, 1e-3)
+          
+        }else if(sum(delta==3)!=0){ 
+          etal = 1*(y>=y0 & deltaL==1)
+          sl = 1-prod((1 - nom/denoml)^etal)
+          ww[i] = 1/pmax(1-sl, 1e-3)
+          
+        }
       }
     }
-    srl
+    ww[is.na(ww)]=0
+    ww
   }
   
-  Ishrfwtfunc = function(L,R,T,x,delta) {
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
-    status=ifelse(delta==1,1,0)
-    dt=data.frame(L=L,R=R,status=status)
+  
+  
+  Ishfunc = function(L,R,T=NULL,x,delta) {
     
-    kml.obj <- rfsrc(Surv(L, status) ~ ., data=dt)
-    kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
-    survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
+    if(sum(delta==4)!=0){ 
+      #pic
+      L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,ifelse(delta==2,pmin(R,T),ifelse(delta==3,pmax(L,T),L))),1e-8); n=length(L)
+      deltaL = ifelse(delta==4|delta==3,0,1)
+      deltaR = ifelse(delta==4|delta==2,0,1)
+      if(sum(deltaL)==length(deltaL)){
+        deltaL=ifelse(delta==1,0,1)
+      }
+      if(sum(deltaR)==length(deltaR)){
+        deltaR=ifelse(delta==1,0,1)
+      }
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      #dc
+      L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
+      deltaL = ifelse(delta==3,0,1)
+      deltaR = ifelse(delta==2,0,1)
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
+      #rc
+      R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y); y=Y
+      deltaR = ifelse(delta==2,0,1)
+      dt=data.frame(R=R,statusr=deltaR,x=x,xx=1)
+      
+    }else if(sum(delta==3)!=0){ 
+      #lc
+      L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y); y=Y
+      deltaL = ifelse(delta==3,0,1)
+      dt=data.frame(L=L,statusl=deltaL,x=x,xx=1)
+    }
     
-    kmr.obj <- rfsrc(Surv(R, status) ~ ., data=dt)
-    kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
-    survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
+    
+    if(sum(delta==0)==n){
+      survl=survr=0
+      
+    }else if(sum(delta==4)!=0){ 
+      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
+      kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
+      survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
+      
+      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
+      kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
+      survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
+      kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
+      survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
+      
+      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
+      kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
+      survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
+      
+    }else if(sum(delta==2)!=0 & sum(delta==3)==0){
+      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-R-statusr, data=dt)
+      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
+      kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
+      survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
+      
+    }else if(sum(delta==3)!=0){ 
+      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl, data=dt)
+      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
+      kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
+      survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
+    }
+    
     
     ww= rep(0,n)
     for (i in 1:n) {
       if(delta[i]==1){
-        sl = approx( c(0, (kml$time), 100), c(1,survl,0), xout=Y[i])$y
-        sr = approx( c(0, (kmr$time), 100), c(1, survr, 0), xout=Y[i])$y
-        ww[i] = 1/pmax( sr-sl, 1e-3)
+        
+        if(sum(delta==1)==n){
+          ww[i] = 1
+          
+        }else if(sum(delta==4)!=0){ 
+          sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
+          sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
+          ww[i] = 1/pmax(1-(sr-sl),1e-3)
+          
+        }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+          sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
+          sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
+          ww[i] = 1/pmax( sr-sl, 1e-3)
+          
+        }else if(sum(delta==2)!=0 & sum(delta==3)==0){ 
+          sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
+          ww[i] = 1/pmax(sr, 1e-3)
+          
+        }else if(sum(delta==3)!=0){ 
+          sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
+          ww[i] = 1/pmax(1-sl, 1e-3)
+          
+        }
       }
     }
     ww[is.na(ww)]=0
@@ -165,13 +339,13 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
   }
   
   DCrq=function(L,R,T,x,delta,ww,tau,eta){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
     rq((Y)~x, weights = ww*eta, tau = tau)$coef #int, beta1, beta2
   }
   
   
   Efunc=function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -180,19 +354,9 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     U/cluster
   }
   
-  Efunc2=function(L,R,T,x,delta,tau,ww,eta,cluster,beta){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
-    xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    res = as.numeric(Y - xx%*%beta)
-    ind = ifelse(res<=0,1,0)
-    wwind = ww*ind
-    U = as.vector( t(xx *eta*ww)%*%(ind  - tau) )
-    U/cluster
-  }
-  
   DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
-    wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; wl[is.infinite(wl)]=0; n=length(Y); 
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
+    wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
@@ -229,8 +393,9 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
   
   
   Afunc=function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y)
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
+    exactnum=sum(ifelse(delta==1,1,0))
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     wwss=ww/ss
@@ -240,7 +405,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
   }
   
   Gfunc=function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma){
-    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y);
+    L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) )
     res = as.numeric(Y - xx%*%beta)
@@ -275,39 +440,27 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     (Gamma-GammaR+GammaL)/cluster
   }
   
-  Gfunc2 = function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma,B=100) {
+  Gfunc2 = function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma) {
     n=length(L);
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
       Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
     }))
-    Var = cov(Shat*n)
-    solve(Var)
+    Var = cov(Shat) * (cluster)
+    Var
   }
   
-  
-  Gfunc3= function(L,R,T,x,delta,tau,ww,eta,id,cluster,beta,Sigma,B=100) {
+  Gfunc3= function(L,R,T,x,delta,tau,ww,eta,id,cluster,beta,Sigma) {
     n=length(L)
-    # tabid=as.vector(table(id))
-    # idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
-    df=data.frame(num=1:n, id=id, L=L, R=R, T=T, ww=ww, x=x, eta=eta, delta=delta)
-    len=length(unique(df$id))
-    uniqid=unique(df$id)
-    Shat2=matrix(0,ncol = 3,nrow = 1)
-    for (i in 1:len) {
-      df2 = subset(df,id==uniqid[i])
-      library(MASS)
-      Shat = t(replicate(B,{
-        ndf2=nrow(df2)
-        newx=as.matrix(cbind(df2$x.x1,df2$x.x2))
-        idx = sample(ndf2,ndf2,replace = TRUE)
-        Efunc(L=df2$L[idx],R=df2$R[idx],T=df2$T[idx],x=newx[idx,],delta=df2$delta[idx],tau=tau,ww=df2$ww[idx],eta=df2$eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
-      }))
-      Shat2=rbind(Shat2,(Shat))
-    }
-    Var = cov(Shat2*n)
-    solve(Var)/sqrt(cluster)
+    library(MASS)
+    Shat = t(replicate(B,{
+      tabid=as.vector(table(id))
+      idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
+      Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
+    }))
+    Var = cov(Shat) * (cluster)
+    Var
   }
   
   # update variance estimator
@@ -318,46 +471,41 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
     newSigma/n
   }
   
-  L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmax(R,pmax(L,T)) );n=length(Y);
+  L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
   if(is.null(id)){eta=rep(1,n); cluster=n}
+  else if(index==0){eta=rep(1,n); cluster=n}
   else{ci=rep(c(table(id)),c(table(id))); wi=(1/ci); eta=(wi^(index)); cluster=length(table(id))}
   
-  if(wttype=="Param"){ww=wtfunc(L=L,R=R,T=T,delta=delta);}
-  else if(wttype=="Ishwaran"){ww=Ishrfwtfunc(L=L,R=R,T=T,delta=delta,x=x);}
-  else if(wttype=="Beran" & is.null(hlimit)==F){ww=Berwtfunc(L=L,R=R,T=T,delta=delta,x=x,h=hlimit);}
+  if(wttype=="KM"){ww=wtft(L=L,R=R,T=T,delta=delta);}
+  if(wttype=="Ishwaran"){ww=Ishfunc(L=L,R=R,T=T,delta=delta,x=x);}
+  if(wttype=="Beran"){ww=Berfunc(L=L,R=R,T=T,delta=delta,x=x);}
   xx = as.matrix(cbind(1,x)); p = ncol(xx)
   old_beta = init = beta = DCrq(L=L,R=R,T=T,delta=delta,x=x,ww=ww,eta=eta,tau=tau)
   old_Sigma = Sigma = diag(p)/cluster
   
   
-  i=0; eps=1; max.iter=100; tol = 1e-3; 
+  i=0; eps=1;
   while (i<max.iter & eps >= tol ) {
     Amat = Afunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
       new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
-    }
-    else if(estimation=="DR"){
-      wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
+    }else if(estimation=="DR"){
+      wr=wtft(L=L,R=R,T=T,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
       new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
     }
     
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-      new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
+    }else if(var.estimation=="Bootstrap" & is.null(id)){
+      Gamma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+    }else if(var.estimation=="Bootstrap" & is.null(id)==F){
+      Gamma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    else if(var.estimation=="Bootstrap" & is.null(id)){
-      # new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
-      new_Sigma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-    }
-    else if(var.estimation=="Bootstrap" & is.null(id)==F){
-      # new_beta = BB::dfsane(par=beta,fn=Efunc2,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,control=list(trace=FALSE))$par
-      new_Sigma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-    }
+    new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     
     if (det(new_Sigma) <= 0) {
       new_beta = old_beta; new_Sigma = old_Sigma
     }
-    
     eps = max(max(abs(new_beta - old_beta)),
               max(abs(new_Sigma - old_Sigma)))
     old_beta = new_beta; old_Sigma = new_Sigma; 
@@ -368,7 +516,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="Para
                  est=new_beta,se=se,
                  pvalue = 1 - pnorm(abs(new_beta/se)),
                  lb = new_beta-1.96*se, ub = new_beta+1.96*se)
-  colnames(res)=c("tau","coefficients","se","pvalue","95% lower bd","95% upper bd")
+  colnames(res)=c("tau","coefficients","se","pvalue","lower bd","upper bd")
   rownames(res)[1]="Intercept"
   round((res), 6) 
 }
