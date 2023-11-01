@@ -113,8 +113,10 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     if(sum(delta==4)!=0){ 
       #pic
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
-      kml = survfit(Surv(L) ~ 1)
-      kmr = survfit(Surv(R) ~ 1)
+      deltaL = ifelse(delta==4|delta==3,3,1)
+      deltaR = ifelse(delta==4|delta==2,3,1)
+      kml = survfit(Surv(L,deltaL) ~ 1)
+      kmr = survfit(Surv(R,deltaR) ~ 1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
