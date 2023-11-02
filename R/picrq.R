@@ -84,7 +84,7 @@ NULL
 #'                                       x2= case_when(KRAS_C == 0 ~ 1,
 #'                                                     KRAS_C == 1 ~ 0),
 #'                                       delta = case_when(IC == 0 ~ 1,
-#'                                                         IC == 1 ~ 0)
+#'                                                         IC == 1 ~ 4)
 #'));
 #'U=(log(d$U));V=log(d$V); delta=d$delta
 #'x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
