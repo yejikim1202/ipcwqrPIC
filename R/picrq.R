@@ -11,7 +11,7 @@ NULL
 #' @param tau quantile level.
 #' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
-#' @param hlimit bandwidth value, default is NULL.
+#' @param hlimit bandwidth value, default is 0.1
 #' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
 #' @param contx2.pos position of another continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
