@@ -127,8 +127,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
         if(sum(delta==1)==n){
           ww[i] = 1
         }else if(sum(delta==4)!=0){ 
-          sl=approx(c(0,-kml$time,100),c(1,1-kml$surv,0), xout=L[i])$y
-          sr=approx(c(0,kmr$time,100),c(1,kmr$surv,0), xout=R[i])$y
+          sl=approx(c(0,-kml$time,maxit),c(1,1-kml$surv,0), xout=L[i])$y
+          sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
           ww[i] = 1/pmax(1-(sr-sl), 1e-3)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & is.null(estimation)){
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
@@ -258,7 +258,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     }
     
     
-    if(sum(delta==0)==n){
+    if(sum(delta==1)==n){
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
