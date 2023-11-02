@@ -21,6 +21,7 @@ NULL
 #' @param B the number of iterations in the bootstrap method., default is 100
 #' @param maxit maximum time value of event time T or L and R, default is 100.
 #' @param max.iter maximum number of iteration for the quantile regression estimator, default is 100.
+#' @param tol.wt tolerance of the minimum threshold for the calculated weights, default is 1e-3.
 #' @param tol tolerance of iteration for the quantile regression estimator, default is 1e-3.
 #'
 #' @return \code{dcrq} returns a data frame containing at least the following components:
@@ -78,7 +79,7 @@ NULL
 #'
 
 
-dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol=1e-3){
+dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
   library(MASS)
@@ -129,21 +130,21 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
         }else if(sum(delta==4)!=0){ 
           sl=approx(c(0,-kml$time,maxit),c(1,1-kml$surv,0), xout=L[i])$y
           sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
-          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+          ww[i] = 1/pmax(1-(sr-sl), tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & is.null(estimation)){
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & estimation=="DR"){ 
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr, 1e-3)
+          ww[i] = 1/pmax( sr, tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
         }else if(sum(delta==3)!=0){ 
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
         }
       }
     }
@@ -200,24 +201,24 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
           etal = 1*(y>=y0 & delta!=1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+          ww[i] = 1/pmax(1-(sr-sl), tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
           etar = 1*(y<=y0 & deltaR==1)
           etal = 1*(y>=y0 & deltaL==1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
           etar = 1*(y<=y0 & deltaR==1)
           sr = prod((1 - nom/denomr)^etar)
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
           
         }else if(sum(delta==3)!=0){ 
           etal = 1*(y>=y0 & deltaL==1)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
           
         }
       }
@@ -307,20 +308,20 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
         }else if(sum(delta==4)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=L[i])$y
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=R[i])$y
-          ww[i] = 1/pmax(1-(sr-sl),1e-3)
+          ww[i] = 1/pmax(1-(sr-sl),tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){ 
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
           
         }else if(sum(delta==3)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
           
         }
       }
