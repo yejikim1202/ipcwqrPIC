@@ -58,8 +58,8 @@ NULL
 #' \dontrun{
 #' # Simulations
 #' n=200; x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
-#' T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
-#' L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+#' T = 3.7+x1+x2+rnorm(n)*(1-0.1*x2)
+#' L=3+runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
 #' Y=pmin(R,pmax(T,L))
 #' delta=case_when(
 #'  T<L ~ 3,
@@ -77,6 +77,7 @@ NULL
 #'
 #'
 #'
+
 
 
 dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
