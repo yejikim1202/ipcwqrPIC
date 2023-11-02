@@ -6,7 +6,7 @@ NULL
 #'
 #' @param L left-censoring time, having 0 if left-censored.
 #' @param R right-censoring time, having \code{Inf} if right-censored.
-#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored;
+#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored; 4: interval-censored
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
