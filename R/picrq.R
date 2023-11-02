@@ -523,13 +523,3 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   rownames(res)[1]="Intercept"
   round((res), 6) 
 }
-
-Etable=function(est,se,beta0){
-  bias=colMeans(est)-beta0
-  ase=apply(est, 2, sd)
-  ese=colMeans(se)
-  cpl=t( t(est)-1.96*t(se) < beta0 )
-  cpu=t( t(est)+1.96*t(se) > beta0 )
-  cp=colMeans( cpl*cpu )
-  (round(cbind(bias,ase,ese,cp), 3))
-}
