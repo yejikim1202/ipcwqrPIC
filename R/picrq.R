@@ -6,19 +6,21 @@ NULL
 #'
 #' @param L left-censoring time, having 0 if left-censored.
 #' @param R right-censoring time, having \code{Inf} if right-censored.
-#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored; 4: interval-censored
+#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored;
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
+#' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
 #' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is 0.1
-#' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
-#' @param contx2.pos position of another continuous covariate of variable x used in the kernel of the Beran method, the default is 1.
+#' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
+#' @param contx2.pos position of the same or another continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
 #' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
 #' @param index index of cluster weight, default is 1
 #' @param B the number of iterations in the bootstrap method., default is 100
 #' @param maxit maximum time value of event time T or L and R, default is 100.
 #' @param max.iter maximum number of iteration for the quantile regression estimator, default is 100.
+#' @param tol.wt tolerance of the minimum threshold for the calculated weights, default is 1e-3.
 #' @param tol tolerance of iteration for the quantile regression estimator, default is 1e-3.
 #'
 #' @return \code{picrq} returns a data frame containing at least the following components:
@@ -97,7 +99,7 @@ NULL
 #'
 #'
 
-picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol=1e-3){
+picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
   library(MASS)
@@ -106,6 +108,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   library(quantreg)
   library(glmnet)
   library(randomForestSRC)
+  
   
   
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
@@ -148,21 +151,21 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
         }else if(sum(delta==4)!=0){ 
           sl=approx(c(0,-kml$time,maxit),c(1,1-kml$surv,0), xout=L[i])$y
           sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
-          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+          ww[i] = 1/pmax(1-(sr-sl), tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & is.null(estimation)){
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0 & estimation=="DR"){ 
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr, 1e-3)
+          ww[i] = 1/pmax( sr, tol.wt)
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
           sr = approx( c(0, kmr$time, maxit), c(1, kmr$surv, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
         }else if(sum(delta==3)!=0){ 
           sl = approx( c(0, -kml$time, maxit), c(1, 1-kml$surv,0), xout=Y[i])$y
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
         }
       }
     }
@@ -219,24 +222,24 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
           etal = 1*(y>=y0 & delta!=1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax(1-(sr-sl), 1e-3)
+          ww[i] = 1/pmax(1-(sr-sl), tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
           etar = 1*(y<=y0 & deltaR==1)
           etal = 1*(y>=y0 & deltaL==1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
           etar = 1*(y<=y0 & deltaR==1)
           sr = prod((1 - nom/denomr)^etar)
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
           
         }else if(sum(delta==3)!=0){ 
           etal = 1*(y>=y0 & deltaL==1)
           sl = 1-prod((1 - nom/denoml)^etal)
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
           
         }
       }
@@ -326,20 +329,20 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
         }else if(sum(delta==4)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=L[i])$y
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=R[i])$y
-          ww[i] = 1/pmax(1-(sr-sl),1e-3)
+          ww[i] = 1/pmax(1-(sr-sl),tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
-          ww[i] = 1/pmax( sr-sl, 1e-3)
+          ww[i] = 1/pmax( sr-sl, tol.wt)
           
         }else if(sum(delta==2)!=0 & sum(delta==3)==0){ 
           sr = approx( c(0, (kmr$event.info$time.interest), maxit), c(1, survr, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(sr, 1e-3)
+          ww[i] = 1/pmax(sr, tol.wt)
           
         }else if(sum(delta==3)!=0){ 
           sl = approx( c(0, (kml$event.info$time.interest), maxit), c(1, survl, 0), xout=Y[i])$y
-          ww[i] = 1/pmax(1-sl, 1e-3)
+          ww[i] = 1/pmax(1-sl, tol.wt)
           
         }
       }
@@ -356,11 +359,14 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
   Efunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
+    ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
+    ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
-    U = as.vector( t(xx *eta)%*%(Phi*ww  - tau) )
-    U/cluster
+    wwind = ww*ind
+    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
+    U/sqrt(cluster)
   }
   
   DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -371,7 +377,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
-    U = as.vector( t(xx *eta)%*%(wwind - tau) )
+    Phi = as.vector( pnorm( -res/ss ) )
+    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
     
@@ -381,19 +389,19 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
       if(delta[i]==4){
         indr=Y>=Y[i]
         dNir = Y<=Y[i]
-        resr = as.numeric((Y - xx%*%beta)*indr)
+        resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
         dMr=dNir-( (yind/denom) *dNir)
-        Rft=(t(xx*wr*dMr*indr*eta)%*%( ind2 - tau ))
-        UR=UR+((Rft/n))
+        Rft=(t(xx*wr*dMr*indr*(eta/n))%*%( ind2 - tau ))
+        UR=UR+((Rft))
         
         indl=Y<=Y[i]
         dNil = Y>=Y[i]
-        resl = as.numeric((Y - xx%*%beta)*indl)
+        resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
         dMl=dNil-( ((1-yind)/(n+1-denom)) *dNil)
-        Lft=(t(xx*wl*dMl*indl *eta)%*%( ind3 - tau ))
-        UL=UL+((Lft/n))
+        Lft=(t(xx*wl*dMl*indl *(eta/n))%*%( ind3 - tau ))
+        UL=UL+((Lft))
       }
     }
     (U+(UR)+(UL))/(cluster)
@@ -493,26 +501,27 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     Amat = Afunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
       new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/(n)
+    }else if(estimation=="DR"){
+      wr=wtft(L=L,R=R,T=NULL,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
+      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
     }
+    
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-    }
-    else if(var.estimation=="Bootstrap" & is.null(id)){
+    }else if(var.estimation=="Bootstrap" & is.null(id)){
       Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
-    }
-    else if(var.estimation=="Bootstrap"){
+    }else if(var.estimation=="Bootstrap"){
       Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
+    
     if (det(new_Sigma) <= 0) {
       new_beta = old_beta; new_Sigma = old_Sigma
     }
-    
     eps = max(max(abs(new_beta - old_beta)),
               max(abs(new_Sigma - old_Sigma)))
     old_beta = new_beta; old_Sigma = new_Sigma; 
     i = i+1
-    
   }
   se = sqrt(diag(new_Sigma))
   res=data.frame(tau=c(rep(tau,p)),
