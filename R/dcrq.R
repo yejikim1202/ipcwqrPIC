@@ -79,7 +79,6 @@ NULL
 #'
 
 
-
 dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
@@ -342,9 +341,12 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
     ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
+    ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
-    U = as.vector( t(xx *eta)%*%(Phi* ww  - tau) )
-    U/cluster
+    wwind = ww*ind
+    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
+    U/sqrt(cluster)
   }
   
   DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -355,7 +357,9 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
-    U = as.vector( t(xx *eta)%*%(wwind - tau) )
+    Phi = as.vector( pnorm( -res/ss ) )
+    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
     
@@ -365,23 +369,23 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       if(delta[i]==2){
         indr=Y>=Y[i]
         dNir = Y<=Y[i]
-        resr = as.numeric((Y - xx%*%beta)*indr)
+        resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
         dMr=dNir-( (yind/denom) *dNir)
-        Rft=(t(xx*wr*dMr*indr*eta)%*%( ind2 - tau ))
-        UR=UR+((Rft/n))
+        Rft=(t(xx*wr*dMr*indr*(eta/n))%*%( ind2 - tau ))
+        UR=UR+((Rft))
       }
       if(delta[i]==3){
         indl=Y<=Y[i]
         dNil = Y>=Y[i]
-        resl = as.numeric((Y - xx%*%beta)*indl)
+        resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
         dMl=dNil-( ((1-yind)/(n+1-denom)) *dNil)
-        Lft=(t(xx*wl*dMl*indl *eta)%*%( ind3 - tau ))
-        UL=UL+((Lft/n))
+        Lft=(t(xx*wl*dMl*indl *(eta/n))%*%( ind3 - tau ))
+        UL=UL+((Lft))
       }
     }
-    (U+(UR)+(UL))/(cluster)
+    ((U+(UR)+(UL))/(cluster))
   }
   
   
@@ -481,10 +485,12 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
   while (i<max.iter & eps >= tol ) {
     Amat = Afunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
-      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      # new_beta = BB::dfsane(par=old_beta,fn=Efunc,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster, Sigma = old_Sigma,control=list(trace=FALSE))$par
+      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(estimation=="DR"){
       wr=wtft(L=L,R=R,T=T,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
-      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      # new_beta = BB::dfsane(par=old_beta,fn=DREfunc,L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,Sigma = old_Sigma,control=list(trace=FALSE))$par
+      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     
     if(var.estimation=="IS"){
@@ -513,4 +519,3 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
   rownames(res)[1]="Intercept"
   round((res), 6) 
 }
-
