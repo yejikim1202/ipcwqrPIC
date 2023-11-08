@@ -22,6 +22,7 @@ dcrq(
   B = 100,
   maxit = 100,
   max.iter = 100,
+  tol.wt = 0.001,
   tol = 0.001
 )
 }
@@ -44,11 +45,11 @@ dcrq(
 
 \item{wttype}{weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
-\item{hlimit}{bandwidth value, default is NULL.}
+\item{hlimit}{bandwidth value, default is 0.1}
 
-\item{contx1.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
+\item{contx1.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.}
 
-\item{contx2.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
+\item{contx2.pos}{position of the same or another continuous covariate of variable x used in the kernel of the Beran method. The default is 1.}
 
 \item{id}{cluster id. If the data does not have clustered structure, set \code{id=NULL}.}
 
@@ -59,6 +60,8 @@ dcrq(
 \item{maxit}{maximum time value of event time T or L and R, default is 100.}
 
 \item{max.iter}{maximum number of iteration for the quantile regression estimator, default is 100.}
+
+\item{tol.wt}{tolerance of the minimum threshold for the calculated weights, default is 1e-3.}
 
 \item{tol}{tolerance of iteration for the quantile regression estimator, default is 1e-3.}
 }
@@ -83,8 +86,8 @@ see Kim et al., (2023+) for detailed method explanation.
 \dontrun{
 # Simulations
 n=200; x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
-T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
-L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+T = 3.7+x1+x2+rnorm(n)*(1-0.1*x2)
+L=3+runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
 Y=pmin(R,pmax(T,L))
 delta=case_when(
  T<L ~ 3,

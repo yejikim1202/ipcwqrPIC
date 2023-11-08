@@ -21,6 +21,7 @@ picrq(
   B = 100,
   maxit = 100,
   max.iter = 100,
+  tol.wt = 0.001,
   tol = 0.001
 )
 }
@@ -35,15 +36,17 @@ picrq(
 
 \item{tau}{quantile level.}
 
+\item{estimation}{estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.}
+
 \item{var.estimation}{variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.}
 
 \item{wttype}{weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
-\item{hlimit}{bandwidth value, default is NULL.}
+\item{hlimit}{bandwidth value, default is 0.1}
 
-\item{contx1.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
+\item{contx1.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.}
 
-\item{contx2.pos}{position of the continuous covariate of variable x used in the kernel of the Beran method, the default is 1.}
+\item{contx2.pos}{position of the same or another continuous covariate of variable x used in the kernel of the Beran method. The default is 1.}
 
 \item{id}{cluster id. If the data does not have clustered structure, set \code{id=NULL}.}
 
@@ -55,10 +58,12 @@ picrq(
 
 \item{max.iter}{maximum number of iteration for the quantile regression estimator, default is 100.}
 
+\item{tol.wt}{tolerance of the minimum threshold for the calculated weights, default is 1e-3.}
+
 \item{tol}{tolerance of iteration for the quantile regression estimator, default is 1e-3.}
 }
 \value{
-\code{dcrq} returns a data frame containing at least the following components:
+\code{picrq} returns a data frame containing at least the following components:
 \itemize{
 \item \code{tau}: quantile level.
 \item \code{coefficients}: regression estimator.
@@ -82,8 +87,8 @@ n = 200
 x1 = runif(n,-1,1)
 x2 = rbinom(n,1,0.43)
 x = cbind(x1,x2)
-T = 2 + x1 + x2 + rnorm(n)
-U = (1 - 0.25*x1)*runif(n, -6, 5)
+T = 4 + x1 + x2 + rnorm(n)
+U = 4 + (1 - 0.25*x1)*runif(n, -6, 5)
 V = U + (1 - 0.1*x2)*runif(n, 6, 20)
 U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
 V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
@@ -107,7 +112,7 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
                                       x2= case_when(KRAS_C == 0 ~ 1,
                                                     KRAS_C == 1 ~ 0),
                                       delta = case_when(IC == 0 ~ 1,
-                                                        IC == 1 ~ 0)
+                                                        IC == 1 ~ 4)
 ));
 U=(log(d$U));V=log(d$V); delta=d$delta
 x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
