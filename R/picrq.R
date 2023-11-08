@@ -180,6 +180,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     }else if(sum(delta==4)!=0){ 
       #pic
       L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L); y=Y
+      deltaL = ifelse(delta==4|delta==3,1,0)
+      deltaR = ifelse(delta==4|delta==2,1,0)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
@@ -218,8 +220,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
         if(sum(delta==1)==n){
           ww[i] = 1
         }else if(sum(delta==4)!=0){ 
-          etar = 1*(y<=y0 & delta!=1)
-          etal = 1*(y>=y0 & delta!=1)
+          etar = 1*(y<=y0 & deltaR==1)
+          etal = 1*(y>=y0 & deltaL==1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
           ww[i] = 1/pmax(1-(sr-sl), tol.wt)
@@ -247,8 +249,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     ww[is.na(ww)]=0
     ww
   }
-  
-  
   
   Ishfunc = function(L,R,T=NULL,x,delta) {
     
