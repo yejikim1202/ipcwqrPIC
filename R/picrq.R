@@ -1,103 +1,3 @@
-#' @importFrom stats as.formula binomial predict sd
-NULL
-#' Fit the interval-censored AFT model with quantile regression model
-#' 
-#' Fit inverse weighted quantile regression with partly interval-censored data
-#'
-#' @param L left-censoring time, having 0 if left-censored.
-#' @param R right-censoring time, having \code{Inf} if right-censored.
-#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored;
-#' @param x X matrix of baseline covariates.
-#' @param tau quantile level.
-#' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param var.estimation variance estimating method, if var.estimation="IS", the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
-#' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
-#' @param hlimit bandwidth value, default is 0.1
-#' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
-#' @param contx2.pos position of the same or another continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
-#' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
-#' @param index index of cluster weight, default is 1
-#' @param B the number of iterations in the bootstrap method., default is 100
-#' @param maxit maximum time value of event time T or L and R, default is 100.
-#' @param max.iter maximum number of iteration for the quantile regression estimator, default is 100.
-#' @param tol.wt tolerance of the minimum threshold for the calculated weights, default is 1e-3.
-#' @param tol tolerance of iteration for the quantile regression estimator, default is 1e-3.
-#'
-#' @return \code{picrq} returns a data frame containing at least the following components:
-#' \itemize{
-#'   \item \code{tau}: quantile level.
-#'   \item \code{coefficients}: regression estimator.
-#'   \item \code{se}: standard error estimates for \code{est}.
-#'   \item \code{pvalue}: p-value.
-#'   \item \code{lower bd}: lower bound of coefficients under 95% confidence level.
-#'   \item \code{upper bd}: upper bound of coefficients under 95% confidence level.
-#' }
-#'
-#' @details
-#' see Kim et al., (2023+) for detailed method explanation.
-#'
-#' @references
-#' 
-#' Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data. Technical Report, Univ.California, Berkeley.
-#' 
-#' Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
-#' 
-#' Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time- dependent covariates. Biostatistics. 18 (1), 132–146.
-#' 
-#' Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
-#' 
-#' Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
-#' 
-#' Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
-#' 
-#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
-#' 
-#'
-#' @examples
-#' \dontrun{
-#' # Simulations
-#' set.seed(111)
-#' n = 200
-#' x1 = runif(n,-1,1)
-#' x2 = rbinom(n,1,0.43)
-#' x = cbind(x1,x2)
-#' T = 4 + x1 + x2 + rnorm(n)
-#' U = 4 + (1 - 0.25*x1)*runif(n, -6, 5)
-#' V = U + (1 - 0.1*x2)*runif(n, 6, 20)
-#' U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
-#' V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
-#' delta = ifelse(U==V, 1, 4)
-#' tau=0.3
-#' picrq(U=log(U),V=log(V),delta=delta,x=x,tau=tau,var.estimation = "IS")
-#' 
-#' 
-#' # Data example
-#' library(PICBayes)
-#' library(tidyverse)
-#' data("mCRC")
-#' d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
-#'                                       V = ifelse(y==2,L,R),
-#'                                       # Cluster weighted data
-#'                                       id=(rep(c(table(SITE)),c(table(SITE)))),
-#'                                       # Treatment arm: 0 = FOLFIRI alone, 1 = Panitumumab + FOLFIRI.
-#'                                       x1= case_when(TRT_C == 0 ~ 0, #Pan et al data
-#'                                                     TRT_C == 1 ~ 1),
-#'                                       # Tumor KRAS mutation status: 0 = wild-type, 1 = mutant.
-#'                                       x2= case_when(KRAS_C == 0 ~ 1,
-#'                                                     KRAS_C == 1 ~ 0),
-#'                                       delta = case_when(IC == 0 ~ 1,
-#'                                                         IC == 1 ~ 4)
-#'));
-#'U=(log(d$U));V=log(d$V); delta=d$delta
-#'x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-#'picrq(U=U,V=V,delta,x=x,tau=tau,var.estimation = "IS")
-#'picrq(U=U,V=V,delta,x=x,tau=tau,var.estimation = "Bootstrap")
-#'picrq(U=U,V=V,delta,x=x,tau=tau,hlimit=0.1,wttype="Beran",var.estimation = "IS")
-#'picrq(U=U,V=V,delta,x=x,tau=tau,id=id,index = 1,var.estimation = "IS")
-#' }
-#' @export
-#'
-#'
 
 picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
@@ -364,9 +264,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
-    U = as.vector( t(xx *(eta/(n)) )%*%(wwind - tau) )
-    # U = as.vector( t(xx *(eta/(n)) )%*%(Phi* ww  - tau) )
-    U/sqrt(cluster)
+    U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+    U/(cluster)
   }
   
   DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -378,8 +278,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",h
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
     Phi = as.vector( pnorm( -res/ss ) )
-    U = as.vector( t(xx *(eta/(n)) )%*%(wwind - tau) )
-    # U = as.vector( t(xx *(eta/(n)) )%*%(Phi* ww  - tau) )
+    U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
     
