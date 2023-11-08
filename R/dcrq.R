@@ -268,13 +268,13 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
       
-      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-L-statusl-R-statusr, data=dt)
+      kmr.obj <- rfsrc(Surv(R, statusr==1) ~ .-L-statusl-R-statusr, data=dt)
       # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
       kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
       survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
-      kml.obj <- rfsrc(Surv(-L, statusl==1) ~ .-L-statusl-R-statusr, data=dt)
+      kml.obj <- rfsrc(Surv(-L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
       # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
@@ -344,9 +344,9 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
-    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
-    # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
-    U/sqrt(cluster)
+    U = as.vector( t(xx *(eta/(n)) )%*%(wwind - tau) )
+    # U = as.vector( t(xx *(eta/(n)) )%*%(Phi* ww  - tau) )
+    U/(cluster)
   }
   
   DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -358,7 +358,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
     Phi = as.vector( pnorm( -res/ss ) )
-    U = as.vector( t(xx *(eta/(cluster)) )%*%(wwind - tau) )
+    U = as.vector( t(xx *(eta/(n)) )%*%(wwind - tau) )
     # U = as.vector( t(xx *(eta/(cluster)) )%*%(Phi* ww  - tau) )
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
