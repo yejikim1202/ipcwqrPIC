@@ -58,10 +58,8 @@ base::require("ipcwqrPIC")
 
 picrq() function has the following arguments:
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
-picrq(U=U,V=V,delta=delta,x=x,tau=tau,estimation=NULL,var.estimation = "IS")
+picrq(U=U,V=V,delta=delta,x=x,tau=tau,var.estimation = "IS")
 ```
-
-The option "estimation='DR'" is only applicable to DC data, so it should not be used for PIC data. Therefore, for PIC data, you should use "estimation=NULL" as the option.
 
 dcrq() function has the following arguments:
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
@@ -96,8 +94,8 @@ Next, we simulate univariate doubly-censored (DC) data with normal random error,
 ```{r message=FALSE, warning=FALSE}
 n=200; 
 x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
-T = 7+x1+x2+rnorm(n)*(1-0.1*x2)
-L=7+runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
+L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
 Y=pmin(R,pmax(T,L))
 delta=case_when(
  T<L ~ 3,
@@ -112,7 +110,7 @@ ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Beran", hlimit = 0.1, var.estimation
 ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran", var.estimation = "IS")
 ```
 
-We can choose one of three weighting types, the parametric KM estimating method, Beran's nonparametric KM estimating method, and Ishwaran's nonparametric survival random forests estimating method which can be accessible by using wttype="param", wttype="Beran" and wttype="Ishwaran", respectively.
+We can choose one of three weighting types, the nonparametric KM estimating method, Beran's nonparametric KM estimating method, and Ishwaran's nonparametric survival random forests estimating method which can be accessible by using wttype="param", wttype="Beran" and wttype="Ishwaran", respectively.
 
 Finally, we cover multivariate doubly-censored (MVDC) data with normal random error, which is one of MVDC data simulation setting of Kim et al. (2023+).
 
@@ -122,14 +120,14 @@ cluster=60
 v=rlnorm(cluster,mean=0,sd=0.5)
 k = sample(0:9*10,cluster,replace = TRUE)
 m = ifelse(quantile(v, k/100) <= v & quantile(v, (k+10)/100) <= v,
-             k/10 + 2, 5)
+             k/10 + 2, 2)
 id = as.numeric(unlist(apply(cbind(1:cluster,m),1,function(a) rep(a[1],a[2]))))
 n=sum(m)
-x1=runif(n,-1.4,0.9); x2=rbinom(n,1,0.5)
+x1=runif(n,-1.4,0.9); x2=rbinom(n,1,0.56)
 tabid=as.vector(table(id))
 vi=as.vector(unlist(lapply(tabid, function(x) rnorm(x,0,0.5))))
-T = 8+x1+x2 + vi +rnorm(n)
-L=8+runif(n,-3.8,2); R=L+runif(n,3.2,9.7)
+T = 5+x1+x2 + vi +rnorm(n)
+L=5+runif(n,-3.8,2); R=L+runif(n,3.2,9.7)
 x=as.matrix(cbind(x1,x2),ncol=2)
 delta=case_when(
     T<L ~ 3,
@@ -142,7 +140,7 @@ ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="
 
 In real data analysis, we apply our proposed method to the multivariate clustered PIC data using a phase 3 metastatic colorectal cancer clinical trial. This dataset is accessible for data(mCRC) in the PICBayes R package (Pan, 2021).
 
-Warning! If you use Beran's weighting, you should apply bootstrap estimation to variance estimating.
+Warning! If you use Beran's weighting, we recommend to apply bootstrap estimation to variance estimating.
 
 ```{r message=FALSE, warning=FALSE}
 library(PICBayes)
@@ -162,9 +160,9 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
 delta=with(d,ifelse(y==3,1,
              ifelse(y==2,2,
                            ifelse(y==1,4,3)))); table(delta)
-U=log(d$U);V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Ishwaran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",hlimit=0.1,var.estimation = "IS",id=id,index = 1)
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Ishwaran",var.estimation = "Bootstrap",id=id,index = 1,B=100)
 ```
 
 
