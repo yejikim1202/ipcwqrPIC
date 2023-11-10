@@ -473,7 +473,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }
     }))
-    Var = cov(Shat) * (n)
+    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
+    else Var = (cov(Shat) * (n))
     Var
   }
   
@@ -489,8 +490,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }
     }))
-    Var = cov(Shat) * (n)
-    Var/cluster
+    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
+    else Var = (cov(Shat) * (n))
+    Var
   }
   
   # update variance estimator
