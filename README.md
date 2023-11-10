@@ -56,17 +56,22 @@ delta=with(d,ifelse(y==3,1,
 #> delta
 #>   1   2   3   4 
 #>  52 306 168 329
-U=log(d$U);V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1)
-#>           tau coefficients       se pvalue lower bd upper bd
-#> Intercept 0.1     3.016822 0.054982  0e+00 2.909057 3.124586
-#> 2         0.1     0.325708 0.072708  4e-06 0.183201 0.468215
-#> 3         0.1     0.858293 0.058552  0e+00 0.743531 0.973056
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Ishwaran",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
-#>           tau coefficients       se   pvalue lower bd upper bd
-#> Intercept 0.1     2.709042 0.060092 0.000000 2.591262 2.826822
-#> 2         0.1     0.340565 0.157744 0.015426 0.031387 0.649742
-#> 3         0.1     0.837340 0.154822 0.000000 0.533888 1.140791
+U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation = "IS",id=id,index = 1)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.3     3.748746 0.535599 0.000000  2.698971 4.798521
+#> 2         0.3    -0.111172 0.487981 0.409893 -1.067614 0.845270
+#> 3         0.3     0.294486 0.547552 0.295349 -0.778715 1.367688
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.3     2.708219 0.795586 0.000332  1.148871 4.267567
+#> 2         0.3     0.081961 0.645429 0.449475 -1.183079 1.347002
+#> 3         0.3     1.141439 0.721263 0.056761 -0.272236 2.555114
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,estimatio="DR",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+#>           tau coefficients       se   pvalue  lower bd upper bd
+#> Intercept 0.3     2.729097 0.895645 0.001155  0.973633 4.484561
+#> 2         0.3     0.087457 0.832909 0.458187 -1.545044 1.719958
+#> 3         0.3     1.180394 0.780536 0.065231 -0.349457 2.710244
 ```
 
 
