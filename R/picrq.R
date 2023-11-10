@@ -10,8 +10,8 @@ NULL
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param application modified estimating function is appliced, if you set \code{application=TRUE}.
-#' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
+#' @param application modified estimating method is applied, set \code{application=TRUE}.
+#' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is 0.1
 #' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
@@ -367,8 +367,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     wwind = ww*ind
     if(application==TRUE){
       U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
-    }
-    else{
+    }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
       # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
     }
@@ -386,8 +385,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     wwind = ww*ind
     if(application==TRUE){
       U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
-    }
-    else{
+    }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
       # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
     }
@@ -415,7 +413,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         UL=UL+((Lft))
       }
     }
-    (U+(UR)+(UL))/(cluster)
+    as.vector((U+(UR)+(UL))/(cluster))
   }
   
   Afunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
@@ -464,27 +462,35 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     (Gamma-GammaR+GammaL)/cluster
   }
   
-  Gfunc2 = function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma) {
+  Gfunc2 = function(L,R,x,delta,tau,ww,wr=NULL,eta,cluster,beta,Sigma) {
     n=length(L);
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
-      Efunc(L=L[id],R=R[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      if(is.null(estimation)){
+        Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      }else{
+        DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      }
     }))
-    Var = cov(Shat) * (cluster)
+    Var = cov(Shat) * (n)
     Var
   }
   
-  Gfunc3= function(L,R,x,delta,tau,ww,eta,id,cluster,beta,Sigma) {
+  Gfunc3= function(L,R,x,delta,tau,ww,wr=NULL,eta,id,cluster,beta,Sigma) {
     n=length(L)
     library(MASS)
     Shat = t(replicate(B,{
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
-      Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      if(is.null(estimation)){
+        Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      }else{
+        DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+      }
     }))
-    Var = cov(Shat) * (cluster)
-    Var
+    Var = cov(Shat) * (n)
+    Var/cluster
   }
   
   # update variance estimator
@@ -514,15 +520,24 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(estimation=="DR"){
       wr=wtft(L=L,R=R,T=NULL,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
-      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(var.estimation=="Bootstrap" & is.null(id)){
-      Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      if(is.null(estimation)){
+        Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      }else{
+        Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      }
+      
     }else if(var.estimation=="Bootstrap"){
-      Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      if(is.null(estimation)){
+        Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      }else{
+        Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      }
     }
     new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
     
