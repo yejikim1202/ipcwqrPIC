@@ -460,7 +460,8 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       }
     }
     ))
-    Var = cov(Shat) * (n)
+    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
+    else Var = (cov(Shat) * (n))
     Var
   }
   
@@ -476,8 +477,11 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
         DREfunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }
     }))
-    Var = cov(Shat) * (n)
-    Var/cluster
+    # Var = cov(Shat) * (n)
+    # Var/cluster
+    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
+    else Var = (cov(Shat) * (n))
+    Var
   }
   
   # update variance estimator
