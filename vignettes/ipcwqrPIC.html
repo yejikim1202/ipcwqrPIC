@@ -390,11 +390,11 @@ Kim et al. (2023+).</p>
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>V <span class="ot">=</span> <span class="fu">exp</span>(dplyr<span class="sc">::</span><span class="fu">case_when</span>(<span class="cn">TRUE</span> <span class="sc">~</span> T, T<span class="sc">&gt;</span>V <span class="sc">~</span> <span class="cn">Inf</span>, T<span class="sc">&lt;</span>U <span class="sc">~</span> U))</span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>delta <span class="ot">=</span> <span class="fu">ifelse</span>(U<span class="sc">==</span>V, <span class="dv">1</span>, <span class="dv">4</span>)</span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>tau<span class="ot">=</span><span class="fl">0.3</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>(U),<span class="at">R=</span>(V),<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>(U),<span class="at">R=</span>(V),<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>)</span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     15.35552 1.510073      0 12.39578 18.31527</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; x1        0.3     15.37655 2.354935      0 10.76088 19.99223</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; x2        0.3     25.11766 3.544266      0 18.17090 32.06442</span></span></code></pre></div>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     15.33437 1.597582      0 12.20311 18.46563</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; x1        0.3     15.33528 2.399407      0 10.63244 20.03812</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; x2        0.3     25.18401 3.649200      0 18.03158 32.33645</span></span></code></pre></div>
 <p>We posit two estimating methods, ipcw estimating method and doubly
 robust ipcw estimating method, which can be conducted by specifying
 estimation = NULL and estimation = “DR”, respectively.</p>
@@ -403,8 +403,8 @@ random error, which is one of DC data simulation setting of Kim et
 al. (2023+).</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>n<span class="ot">=</span><span class="dv">200</span>; </span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>x1<span class="ot">=</span><span class="fu">runif</span>(n,<span class="sc">-</span><span class="fl">1.2</span>,<span class="fl">1.7</span>); x2<span class="ot">=</span><span class="fu">rbinom</span>(n,<span class="dv">1</span>,<span class="fl">0.6</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>T <span class="ot">=</span> <span class="fl">1.7</span><span class="sc">+</span>x1<span class="sc">+</span>x2<span class="sc">+</span><span class="fu">rnorm</span>(n)<span class="sc">*</span>(<span class="dv">1</span><span class="fl">-0.1</span><span class="sc">*</span>x2)</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>L<span class="ot">=</span><span class="fu">runif</span>(n,<span class="sc">-</span><span class="fl">2.8</span>,<span class="fl">1.9</span>); R<span class="ot">=</span>L<span class="sc">+</span><span class="fu">runif</span>(n,<span class="fl">4.2</span>,<span class="fl">8.1</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>T <span class="ot">=</span> <span class="dv">10</span><span class="sc">+</span>x1<span class="sc">+</span>x2<span class="sc">+</span><span class="fu">rnorm</span>(n)<span class="sc">*</span>(<span class="dv">1</span><span class="fl">-0.1</span><span class="sc">*</span>x2)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>L<span class="ot">=</span><span class="dv">10</span><span class="sc">+</span><span class="fu">runif</span>(n,<span class="sc">-</span><span class="fl">2.8</span>,<span class="fl">1.9</span>); R<span class="ot">=</span>L<span class="sc">+</span><span class="fu">runif</span>(n,<span class="fl">4.2</span>,<span class="fl">8.1</span>)</span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>Y<span class="ot">=</span><span class="fu">pmin</span>(R,<span class="fu">pmax</span>(T,L))</span>
 <span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>delta<span class="ot">=</span><span class="fu">case_when</span>(</span>
 <span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a> T<span class="sc">&lt;</span>L <span class="sc">~</span> <span class="dv">3</span>,</span>
@@ -412,31 +412,31 @@ al. (2023+).</p>
 <span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a> <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">1</span> <span class="co">#observed</span></span>
 <span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>)</span>
 <span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>L<span class="ot">=</span>L; R<span class="ot">=</span>R; T<span class="ot">=</span>T; delta<span class="ot">=</span>delta; x<span class="ot">=</span><span class="fu">cbind</span>(x1,x2); tau<span class="ot">=</span><span class="fl">0.3</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(L,R,T,delta,x,tau,<span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     1.186138 0.152110      0 0.888003 1.484273</span></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.982779 0.103401      0 0.780114 1.185444</span></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.061001 0.184846      0 0.698703 1.423298</span></span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(L,R,T,delta,x,tau,<span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>)</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     1.186003 0.000616      0 1.184796 1.187210</span></span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.982857 0.000605      0 0.981673 0.984042</span></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.061137 0.000780      0 1.059608 1.062665</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(L,R,T,delta,x,tau,<span class="at">estimation =</span> <span class="st">&quot;DR&quot;</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     1.186138 0.152110      0 0.888003 1.484273</span></span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.982779 0.103401      0 0.780114 1.185444</span></span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.061001 0.184846      0 0.698703 1.423298</span></span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(L,R,T,delta,x,tau,<span class="at">wttype =</span> <span class="st">&quot;Beran&quot;</span>, <span class="at">hlimit =</span> <span class="fl">0.1</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     1.200371 0.149534      0 0.907284 1.493457</span></span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.956435 0.104095      0 0.752410 1.160460</span></span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.081196 0.180179      0 0.728045 1.434347</span></span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(L,R,T,delta,x,tau,<span class="at">wttype =</span> <span class="st">&quot;Ishwaran&quot;</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     1.096866 0.123545      0 0.854718 1.339013</span></span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; x1        0.3     1.066446 0.112358      0 0.846225 1.286668</span></span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.045912 0.199120      0 0.655637 1.436187</span></span></code></pre></div>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd upper bd</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     9.404970 0.294582 0.000000 8.827590 9.982349</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.848575 0.168394 0.000000 0.518522 1.178627</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.129621 0.370693 0.001154 0.403062 1.856180</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">estimation =</span> <span class="st">&quot;DR&quot;</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd  upper bd</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     9.475497 0.285260 0.000000 8.916388 10.034607</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.897689 0.162009 0.000000 0.580152  1.215226</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.981659 0.353841 0.002766 0.288130  1.675187</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">estimation =</span> <span class="st">&quot;DR&quot;</span>, <span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd  upper bd</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     9.454734 0.316924 0.000000 8.833564 10.075904</span></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.893530 0.158614 0.000000 0.582647  1.204413</span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.017553 0.358599 0.002273 0.314699  1.720408</span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype =</span> <span class="st">&quot;Beran&quot;</span>, <span class="at">hlimit =</span> <span class="fl">0.1</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd upper bd</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     9.673646 0.154923 0.000000 9.369997 9.977295</span></span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.888396 0.111405 0.000000 0.670042 1.106751</span></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.853459 0.258095 0.000472 0.347592 1.359326</span></span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype =</span> <span class="st">&quot;Ishwaran&quot;</span>, <span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>)</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd upper bd</span></span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     9.412392 0.258132 0.000000 8.906453 9.918331</span></span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; x1        0.3     0.878600 0.164010 0.000000 0.557141 1.200059</span></span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt; x2        0.3     1.033382 0.345821 0.001403 0.355573 1.711191</span></span></code></pre></div>
 <p>We can choose one of three weighting types, the nonparametric KM
 estimating method, Beran’s nonparametric KM estimating method, and
 Ishwaran’s nonparametric survival random forests estimating method which
@@ -466,15 +466,15 @@ id=id and index value is put, we can get the adjusted IPCW method.</p>
 <span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">1</span> <span class="co">#observed</span></span>
 <span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  )</span>
 <span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;KM&quot;</span>,<span class="at">var.estimation=</span><span class="st">&quot;IS&quot;</span>,<span class="at">id=</span><span class="cn">NULL</span>)</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue lower bd upper bd</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     4.461217 0.299449 0.000000 3.874297 5.048137</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; x1        0.3     1.093945 0.289972 0.000081 0.525599 1.662290</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.808798 0.326161 0.006574 0.169522 1.448073</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue  lower bd upper bd</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     4.695292 0.221153 0.000000  4.261833 5.128752</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; x1        0.3     1.690734 0.359235 0.000001  0.986633 2.394835</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.180880 0.390641 0.321670 -0.584775 0.946536</span></span>
 <span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">dcrq</span>(<span class="at">L=</span>L,<span class="at">R=</span>R,<span class="at">T=</span>T,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;KM&quot;</span>,<span class="at">var.estimation=</span><span class="st">&quot;IS&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>)</span>
 <span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue  lower bd upper bd</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     4.697998 0.242929 0.000000  4.221858 5.174138</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; x1        0.3     1.114175 0.273507 0.000023  0.578100 1.650250</span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.460373 0.260494 0.038588 -0.050195 0.970942</span></span></code></pre></div>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     4.392719 0.260954 0.000000  3.881250 4.904188</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; x1        0.3     1.406055 0.319172 0.000005  0.780478 2.031632</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; x2        0.3     0.615901 0.398914 0.061301 -0.165971 1.397774</span></span></code></pre></div>
 <p>In real data analysis, we apply our proposed method to the
 multivariate clustered PIC data using a phase 3 metastatic colorectal
 cancer clinical trial. This dataset is accessible for data(mCRC) in the
@@ -504,17 +504,22 @@ bootstrap estimation to variance estimating.</p>
 <span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; delta</span></span>
 <span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt;   1   2   3   4 </span></span>
 <span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;  52 306 168 329</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>U<span class="ot">=</span>(<span class="fu">log</span>(d<span class="sc">$</span>U));V<span class="ot">=</span><span class="fu">log</span>(d<span class="sc">$</span>V); x <span class="ot">=</span> <span class="fu">cbind</span>(d<span class="sc">$</span>x1,d<span class="sc">$</span>x2); id<span class="ot">=</span>d<span class="sc">$</span>id;  tau<span class="ot">=</span><span class="fl">0.1</span>;</span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>U,<span class="at">R=</span>V,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;KM&quot;</span>,<span class="at">hlimit=</span><span class="fl">0.1</span>,<span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>)</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>U<span class="ot">=</span>(<span class="fu">log</span>(d<span class="sc">$</span>U));V<span class="ot">=</span><span class="fu">log</span>(d<span class="sc">$</span>V); x <span class="ot">=</span> <span class="fu">cbind</span>(d<span class="sc">$</span>x1,d<span class="sc">$</span>x2); id<span class="ot">=</span>d<span class="sc">$</span>id;  tau<span class="ot">=</span><span class="fl">0.3</span>;</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>U,<span class="at">R=</span>V,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;KM&quot;</span>,<span class="at">application=</span><span class="cn">TRUE</span>,<span class="at">var.estimation =</span> <span class="st">&quot;IS&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>)</span>
 <span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue  lower bd upper bd</span></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; Intercept 0.1     2.429438 0.279435 0.000000  1.881745 2.977130</span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt; 2         0.1     0.971816 0.325239 0.001404  0.334348 1.609283</span></span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt; 3         0.1     0.209743 0.303537 0.244784 -0.385189 0.804676</span></span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>U,<span class="at">R=</span>V,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;Ishwaran&quot;</span>,<span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>,<span class="at">B=</span><span class="dv">100</span>)</span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se pvalue lower bd upper bd</span></span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt; Intercept 0.1     1.945974 0.000195      0 1.945593 1.946356</span></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt; 2         0.1     0.133568 0.000365      0 0.132852 0.134283</span></span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt; 3         0.1     0.693149 0.000274      0 0.692612 0.693685</span></span></code></pre></div>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     3.748746 0.535599 0.000000  2.698971 4.798521</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt; 2         0.3    -0.111172 0.487981 0.409893 -1.067614 0.845270</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt; 3         0.3     0.294486 0.547552 0.295349 -0.778715 1.367688</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>U,<span class="at">R=</span>V,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;Beran&quot;</span>,<span class="at">application=</span><span class="cn">TRUE</span>,<span class="at">hlimit=</span><span class="fl">0.1</span>,<span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>,<span class="at">B=</span><span class="dv">100</span>)</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue  lower bd upper bd</span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     2.708219 0.795586 0.000332  1.148871 4.267567</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt; 2         0.3     0.081961 0.645429 0.449475 -1.183079 1.347002</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt; 3         0.3     1.141439 0.721263 0.056761 -0.272236 2.555114</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>ipcwqrPIC<span class="sc">::</span><span class="fu">picrq</span>(<span class="at">L=</span>U,<span class="at">R=</span>V,<span class="at">delta=</span>delta,<span class="at">x=</span>x,<span class="at">tau=</span>tau,<span class="at">wttype=</span><span class="st">&quot;Beran&quot;</span>,<span class="at">application=</span><span class="cn">TRUE</span>,<span class="at">estimatio=</span><span class="st">&quot;DR&quot;</span>,<span class="at">hlimit=</span><span class="fl">0.1</span>,<span class="at">var.estimation =</span> <span class="st">&quot;Bootstrap&quot;</span>,<span class="at">id=</span>id,<span class="at">index =</span> <span class="dv">1</span>,<span class="at">B=</span><span class="dv">100</span>)</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">#&gt;           tau coefficients       se   pvalue  lower bd upper bd</span></span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt; Intercept 0.3     2.729097 0.895645 0.001155  0.973633 4.484561</span></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt; 2         0.3     0.087457 0.832909 0.458187 -1.545044 1.719958</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt; 3         0.3     1.180394 0.780536 0.065231 -0.349457 2.710244</span></span></code></pre></div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>

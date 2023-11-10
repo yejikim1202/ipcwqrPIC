@@ -84,7 +84,7 @@ U = exp(dplyr::case_when(TRUE ~ T, T>V ~ V, T<U ~ -Inf))
 V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 delta = ifelse(U==V, 1, 4)
 tau=0.3
-ipcwqrPIC::picrq(L=(U),R=(V),delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::picrq(L=(U),R=(V),delta=delta,x=x,tau=tau,var.estimation = "Bootstrap")
 ```
 
 We posit two estimating methods, ipcw estimating method and doubly robust ipcw estimating method, which can be conducted by specifying estimation = NULL and estimation = "DR", respectively.
@@ -94,8 +94,8 @@ Next, we simulate univariate doubly-censored (DC) data with normal random error,
 ```{r message=FALSE, warning=FALSE}
 n=200; 
 x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
-T = 1.7+x1+x2+rnorm(n)*(1-0.1*x2)
-L=runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+T = 10+x1+x2+rnorm(n)*(1-0.1*x2)
+L=10+runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
 Y=pmin(R,pmax(T,L))
 delta=case_when(
  T<L ~ 3,
@@ -103,11 +103,11 @@ delta=case_when(
  TRUE ~ 1 #observed
 )
 L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
-ipcwqrPIC::dcrq(L,R,T,delta,x,tau,var.estimation = "IS")
-ipcwqrPIC::dcrq(L,R,T,delta,x,tau,var.estimation = "Bootstrap")
-ipcwqrPIC::dcrq(L,R,T,delta,x,tau,estimation = "DR", var.estimation = "IS")
-ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Beran", hlimit = 0.1, var.estimation = "IS")
-ipcwqrPIC::dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran", var.estimation = "IS")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "IS")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "Bootstrap")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Beran", hlimit = 0.1, var.estimation = "IS")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Ishwaran", var.estimation = "IS")
 ```
 
 We can choose one of three weighting types, the nonparametric KM estimating method, Beran's nonparametric KM estimating method, and Ishwaran's nonparametric survival random forests estimating method which can be accessible by using wttype="param", wttype="Beran" and wttype="Ishwaran", respectively.
@@ -160,9 +160,10 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
 delta=with(d,ifelse(y==3,1,
              ifelse(y==2,2,
                            ifelse(y==1,4,3)))); table(delta)
-U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.1;
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",hlimit=0.1,var.estimation = "IS",id=id,index = 1)
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Ishwaran",var.estimation = "Bootstrap",id=id,index = 1,B=100)
+U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation = "IS",id=id,index = 1)
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,estimatio="DR",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
 ```
 
 
