@@ -1,5 +1,86 @@
+#' @importFrom stats as.formula binomial predict sd
+NULL
+#' Fit the doubly-censored AFT model with quantile regression model
+#'
+#' Fit inverse weighted quantile regression with doubly interval-censored data
+#'
+#' @param L left-censoring time, having 0 if left-censored.
+#' @param R right-censoring time, having \code{Inf} if right-censored.
+#' @param T exactly observed time.
+#' @param delta censoring indicator, 1: exactly observed; 2: right-censored; 3: left-censored;
+#' @param x X matrix of baseline covariates.
+#' @param tau quantile level.
+#' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
+#' @param application modified estimating function is appliced, if you set \code{application=TRUE}.
+#' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if var.estimation="Bootstrap", variance bootstrapping method is used.
+#' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
+#' @param hlimit bandwidth value, default is 0.1
+#' @param contx1.pos position of the continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
+#' @param contx2.pos position of the same or another continuous covariate of variable x used in the kernel of the Beran method. The default is 1.
+#' @param id cluster id. If the data does not have clustered structure, set \code{id=NULL}.
+#' @param index index of cluster weight, default is 1
+#' @param B the number of iterations in the bootstrap method., default is 100
+#' @param maxit maximum time value of event time T or L and R, default is 100.
+#' @param max.iter maximum number of iteration for the quantile regression estimator, default is 100.
+#' @param tol.wt tolerance of the minimum threshold for the calculated weights, default is 1e-3.
+#' @param tol tolerance of iteration for the quantile regression estimator, default is 1e-3.
+#'
+#' @return \code{dcrq} returns a data frame containing at least the following components:
+#' \itemize{
+#'   \item \code{tau}: quantile level.
+#'   \item \code{coefficients}: regression estimator.
+#'   \item \code{se}: standard error estimates for \code{est}.
+#'   \item \code{pvalue}: p-value.
+#'   \item \code{lower bd}: lower bound of coefficients under 95% confidence level.
+#'   \item \code{upper bd}: upper bound of coefficients under 95% confidence level.
+#' }
+#'
+#' @details
+#' see Kim et al., (2023+) for detailed method explanation.
+#'
+#' @references
+#' 
+#' Beran, R. (1981). Nonparametric Regression with Randomly Censored Survival Data. Technical Report, Univ.California, Berkeley.
+#' 
+#' Ishwaran, H., U. B. Kogalur, E. H. Blackstone, and M. S. Lauer (2008). Random survival forests. The annals of applied statistics. 2 (3), 841–860.
+#' 
+#' Gorfine, M., Y. Goldberg, and Y. Ritov (2017). A quantile regression model for failure-time data with time- dependent covariates. Biostatistics. 18 (1), 132–146.
+#' 
+#' Chiou, S. H., Kang, S. and Yan, J. (2015). Rank-based estimating equations with general weight for accelerated failure time models: an induced smoothing approach. Statistics in Medicine 34(9): 1495–-1510.
+#' 
+#' Zeng, D. and D. Lin (2008). Efficient resampling methods for nonsmooth estimating functions. Biostatistics 9 (2), 355–363.
+#' 
+#' Pan, C. (2021). PICBayes: Bayesian Models for Partly Interval-Censored Data. R package. https://CRAN.R-project.org/package=PICBayes.
+#' 
+#' Kim, Y., Choi, T., Park, S., Choi, S. and Bandyopadhyay, D. (2023+). Inverse weighted quantile regression with partially interval-censored data.
+#' 
+#'
+#' @examples
+#' \dontrun{
+#' # Simulations
+#' n=200; x1=runif(n,-1.2,1.7); x2=rbinom(n,1,0.6)
+#' T = 3.7+x1+x2+rnorm(n)*(1-0.1*x2)
+#' L=3+runif(n,-2.8,1.9); R=L+runif(n,4.2,8.1)
+#' Y=pmin(R,pmax(T,L))
+#' delta=case_when(
+#'  T<L ~ 3,
+#'  T>R ~ 2,
+#'  TRUE ~ 1 #observed
+#')
+#'L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
+#'dcrq(L,R,T,delta,x,tau,var.estimation="IS")
+#'dcrq(L,R,T,delta,x,tau,var.estimation="Bootstrap")
+#'dcrq(L,R,T,delta,x,tau,estimation = "DR",var.estimation="IS")
+#'dcrq(L,R,T,delta,x,tau,wttype = "Ishwaran",var.estimation="IS")
+#'dcrq(L,R,T,delta,x,tau,wttype = "Beran",hlimit = 0.1,var.estimation="IS")
+#' }
+#' @export
+#'
+#'
+#'
 
-dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
+
+dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
   library(MASS)
@@ -266,9 +347,14 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
-    U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
-    # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
-    U/(cluster)
+    if(application==TRUE){
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
+    }
+    else{
+      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
+      # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
+    }
+    U/sqrt(cluster)
   }
   
   DREfunc=function(L,R,T,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -278,10 +364,15 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
-    wwind = ww*ind
     Phi = as.vector( pnorm( -res/ss ) )
-    U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
-    # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+    wwind = ww*ind
+    if(application==TRUE){
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
+    }
+    else{
+      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
+      # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
+    }
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
     
@@ -364,7 +455,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
-      Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
+      Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta,tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
     }))
     Var = cov(Shat) * (cluster)
     Var
@@ -376,7 +467,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     Shat = t(replicate(B,{
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
-      Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
+      Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta,tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
     }))
     Var = cov(Shat) * (cluster)
     Var
@@ -408,11 +499,11 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,var.estimation=NULL,wttype="KM",
     Amat = Afunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     if(is.null(estimation)){
       # new_beta = BB::dfsane(par=old_beta,fn=Efunc,L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster, Sigma = old_Sigma,control=list(trace=FALSE))$par
-      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(estimation=="DR"){
       wr=wtft(L=L,R=R,T=T,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
       # new_beta = BB::dfsane(par=old_beta,fn=DREfunc,L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,Sigma = old_Sigma,control=list(trace=FALSE))$par
-      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)/n
+      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     
     if(var.estimation=="IS"){
