@@ -59,19 +59,19 @@ delta=with(d,ifelse(y==3,1,
 U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation = "IS",id=id,index = 1)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     3.748746 0.535599 0.000000  2.698971 4.798521
-#> 2         0.3    -0.111172 0.487981 0.409893 -1.067614 0.845270
-#> 3         0.3     0.294486 0.547552 0.295349 -0.778715 1.367688
+#> Intercept 0.3     3.748561 0.535708 0.000000  2.698573 4.798549
+#> 2         0.3    -0.111274 0.488262 0.409863 -1.068267 0.845719
+#> 3         0.3     0.294631 0.547730 0.295318 -0.778919 1.368181
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     2.708219 0.795586 0.000332  1.148871 4.267567
-#> 2         0.3     0.081961 0.645429 0.449475 -1.183079 1.347002
-#> 3         0.3     1.141439 0.721263 0.056761 -0.272236 2.555114
+#> Intercept 0.3     2.707818 0.177515 0.000000  2.359888 3.055748
+#> 2         0.3     0.082049 0.215093 0.351432 -0.339534 0.503631
+#> 3         0.3     1.141851 0.222131 0.000000  0.706475 1.577226
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,estimatio="DR",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
 #>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     2.729097 0.895645 0.001155  0.973633 4.484561
-#> 2         0.3     0.087457 0.832909 0.458187 -1.545044 1.719958
-#> 3         0.3     1.180394 0.780536 0.065231 -0.349457 2.710244
+#> Intercept 0.3     2.719725 0.176441 0.000000  2.373901 3.065549
+#> 2         0.3     0.081384 0.219507 0.355409 -0.348849 0.511617
+#> 3         0.3     1.166419 0.207143 0.000000  0.760419 1.572420
 ```
 
 
