@@ -47,31 +47,31 @@ d = with(data.frame(mCRC), data.frame(U = ifelse(y==0,R,L),
 delta=with(d,ifelse(y==3,1,
              ifelse(y==2,2,
                            ifelse(y==1,4,3)))); table(delta)
-#> 
-#>   0   1   2   3 
-#> 168 329 306  52
+#
+#   0   1   2   3 
+# 168 329 306  52
 delta=with(d,ifelse(y==3,1,
              ifelse(y==2,2,
                            ifelse(y==1,4,3)))); table(delta)
-#> delta
-#>   1   2   3   4 
-#>  52 306 168 329
+# delta
+#   1   2   3   4 
+#  52 306 168 329
 U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation = "IS",id=id,index = 1)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     3.748561 0.535708 0.000000  2.698573 4.798549
-#> 2         0.3    -0.111274 0.488262 0.409863 -1.068267 0.845719
-#> 3         0.3     0.294631 0.547730 0.295318 -0.778919 1.368181
+#           tau coefficients       se   pvalue  lower bd upper bd
+# Intercept 0.3     3.748561 0.535708 0.000000  2.698573 4.798549
+# 2         0.3    -0.111274 0.488262 0.409863 -1.068267 0.845719
+# 3         0.3     0.294631 0.547730 0.295318 -0.778919 1.368181
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     2.707818 0.177515 0.000000  2.359888 3.055748
-#> 2         0.3     0.082049 0.215093 0.351432 -0.339534 0.503631
-#> 3         0.3     1.141851 0.222131 0.000000  0.706475 1.577226
+#           tau coefficients       se   pvalue  lower bd upper bd
+# Intercept 0.3     2.707818 0.177515 0.000000  2.359888 3.055748
+# 2         0.3     0.082049 0.215093 0.351432 -0.339534 0.503631
+# 3         0.3     1.141851 0.222131 0.000000  0.706475 1.577226
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,estimatio="DR",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
-#>           tau coefficients       se   pvalue  lower bd upper bd
-#> Intercept 0.3     2.719725 0.176441 0.000000  2.373901 3.065549
-#> 2         0.3     0.081384 0.219507 0.355409 -0.348849 0.511617
-#> 3         0.3     1.166419 0.207143 0.000000  0.760419 1.572420
+#           tau coefficients       se   pvalue  lower bd upper bd
+# Intercept 0.3     2.719725 0.176441 0.000000  2.373901 3.065549
+# 2         0.3     0.081384 0.219507 0.355409 -0.348849 0.511617
+# 3         0.3     1.166419 0.207143 0.000000  0.760419 1.572420
 ```
 
 
