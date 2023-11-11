@@ -79,7 +79,6 @@ NULL
 #'
 #'
 
-
 dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
@@ -403,7 +402,6 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
   Afunc=function(L,R,T,x,delta,tau,ww,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    exactnum=sum(ifelse(delta==1,1,0))
     ss =  sqrt(pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     wwss=ww/ss
@@ -454,14 +452,13 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
       if(is.null(estimation)){
-        Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        Efunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(n)
       }else{
         DREfunc(L=L[id],R=R[id],T=T[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }
     }
     ))
-    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
-    else Var = (cov(Shat) * (n))
+    Var = (cov(Shat) * (n))
     Var
   }
   
@@ -472,15 +469,12 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       if(is.null(estimation)){
-        Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(n)
       }else{
         DREfunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }
     }))
-    # Var = cov(Shat) * (n)
-    # Var/cluster
-    if(is.null(estimation)) Var = (cov(Shat) * (n))/cluster
-    else Var = (cov(Shat) * (n))
+    Var = (cov(Shat) * (n))
     Var
   }
   
@@ -520,13 +514,13 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       
-    }else if(var.estimation=="Bootstrap" & is.null(id)){
+    }else if(var.estimation=="Bootstrap" & cluster==n){
       if(is.null(estimation)){
         Gamma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }else{
         Gamma = Gfunc2(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }
-    }else if(var.estimation=="Bootstrap" & is.null(id)==FALSE){
+    }else if(var.estimation=="Bootstrap" & cluster!=n){
       if(is.null(estimation)){
         Gamma = Gfunc3(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }else{
