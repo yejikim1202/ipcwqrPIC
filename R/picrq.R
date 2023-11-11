@@ -378,10 +378,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     wl=(ww-wr)/(ww*wr); wl[is.nan(wl)]=0; n=length(Y); 
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
+    ss =  pmax(1e-3, sqrt(diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
-    Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
       U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
@@ -431,7 +430,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
   Gfunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
     L = pmax(L,1e-8); R = pmax(R,1e-8); Y=pmax(ifelse(delta==4,R,L),1e-8); n=length(L)
     xx=as.matrix(cbind(1,x)); p=ncol(xx)
-    ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) )
+    ss = sqrt( pmax(1e-3, diag(xx%*%Sigma%*%t(xx))) ) 
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
@@ -468,12 +467,12 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
       if(is.null(estimation)){
-        Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(n)
+        Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }else{
-        DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n*sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) * (n))
+    Var = (cov(Shat) )
     Var
   }
   
@@ -484,12 +483,12 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       if(is.null(estimation)){
-        Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(n)
+        Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
       }else{
-        DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n*sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) * (n))
+    Var = (cov(Shat) * sqrt(cluster))
     Var
   }
   
@@ -511,7 +510,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
   if(wttype=="Beran"){ww=Berfunc(L=L,R=R,delta=delta,x=x);}
   xx = as.matrix(cbind(1,x)); p = ncol(xx)
   old_beta = init = beta = PICrq(L=L,R=R,delta=delta,x=x,ww=ww,eta=eta,tau=tau)
-  old_Sigma = Sigma = (diag(p)/cluster)
+  old_Sigma = Sigma = (diag(p)/n)
   
   i=0; eps=1
   while (i<max.iter & eps >= tol ) {
