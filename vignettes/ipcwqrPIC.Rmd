@@ -85,6 +85,8 @@ V = exp(dplyr::case_when(TRUE ~ T, T>V ~ Inf, T<U ~ U))
 delta = ifelse(U==V, 1, 4)
 tau=0.3
 ipcwqrPIC::picrq(L=(U),R=(V),delta=delta,x=x,tau=tau,var.estimation = "Bootstrap")
+ipcwqrPIC::picrq(L=(U),R=(V),delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::picrq(L=(U),R=(V),delta=delta,x=x,tau=tau,estimation="DR",var.estimation = "IS")
 ```
 
 We posit two estimating methods, ipcw estimating method and doubly robust ipcw estimating method, which can be conducted by specifying estimation = NULL and estimation = "DR", respectively.
@@ -104,6 +106,7 @@ delta=case_when(
 )
 L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "IS")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "Bootstrap")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "IS")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "Bootstrap")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Beran", hlimit = 0.1, var.estimation = "IS")
@@ -135,7 +138,7 @@ delta=case_when(
     TRUE ~ 1 #observed
   )
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="IS",id=NULL)
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="IS",id=id,index = 1)
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="Bootstrap",id=id,index = 1)
 ```
 
 In real data analysis, we apply our proposed method to the multivariate clustered PIC data using a phase 3 metastatic colorectal cancer clinical trial. This dataset is accessible for data(mCRC) in the PICBayes R package (Pan, 2021).
