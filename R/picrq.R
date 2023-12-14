@@ -366,10 +366,11 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
-      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+    }else if(var.estimation=="IS"){
+      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
     }else{
-      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
-      # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
+      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
     U/sqrt(cluster)
   }
@@ -383,10 +384,11 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
     if(application==TRUE){
-      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )/n
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+    }else if(var.estimation=="IS"){
+      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
     }else{
-      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )/n
-      # U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )/n
+      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
     UR=matrix(0,p,1)
     UL=matrix(0,p,1)
