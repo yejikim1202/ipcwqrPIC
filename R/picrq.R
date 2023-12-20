@@ -366,13 +366,17 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
-      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-    }else if(var.estimation=="IS"){
-      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
-    }else{
+      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
+    }
+    # else if(var.estimation=="IS"){
+    #   U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+    # }
+    else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
-    U/sqrt(cluster)
+    Eft=U/cluster
+    Eft
   }
   
   DREfunc=function(L,R,x,delta,tau,ww,wr,eta,cluster,beta,Sigma){
@@ -384,9 +388,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
     if(application==TRUE){
-      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-    }else if(var.estimation=="IS"){
-      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
     }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
@@ -401,20 +404,25 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         dNir = Y<=Y[i]
         resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
-        dMr=dNir-( (yind/denom) *dNir)
-        Rft=(t(xx*wr*dMr*indr*(eta/n))%*%( ind2 - tau ))
+        dMr=-( (yind/denom)*dNir)
+        Qr=(t(xx/n)%*%((ind2 - tau)))
+        Qrmat=matrix(rep(Qr,each=n), nrow = n)
+        Rft=t(t(wr*dMr *(eta))%*%( Qrmat ))
         UR=UR+((Rft))
         
         indl=Y<=Y[i]
         dNil = Y>=Y[i]
         resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
-        dMl=dNil-( ((1-yind)/(n+1-denom)) *dNil)
-        Lft=(t(xx*wl*dMl*indl *(eta/n))%*%( ind3 - tau ))
+        dMl=(-( ((1-yind)/(n+1-denom))*dNil))
+        Ql=(t(xx/n)%*%((ind3 - tau)))
+        Qlmat=matrix(rep(Ql,each=n), nrow = n)
+        Lft=t(t(wl*dMl *(eta))%*%( Qlmat ))
         UL=UL+((Lft))
       }
     }
-    as.vector((U+(UR)+(UL))/(cluster))
+    Eft=as.vector((U+(UR)+(UL))/(cluster))
+    Eft/sqrt(cluster)
   }
   
   Afunc=function(L,R,x,delta,tau,ww,eta,cluster,beta,Sigma){
@@ -463,34 +471,34 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     (Gamma-GammaR+GammaL)/cluster
   }
   
-  Gfunc2 = function(L,R,x,delta,tau,ww,wr=NULL,eta,cluster,beta,Sigma) {
+  Boot.uni = function(L,R,x,delta,tau,ww,wr=NULL,eta,cluster,beta,Sigma) {
     n=length(L);
     library(MASS)
     Shat = t(replicate(B,{
       id = sample(n,n,replace = TRUE)
       if(is.null(estimation)){
-        Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        Efunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)
       }else{
-        DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*n*sqrt(cluster)
+        DREfunc(L=L[id],R=R[id],x=x[id,],delta=delta[id],tau=tau,wr=wr[id],ww=ww[id],eta=eta[id],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) )
+    Var = (cov(Shat) * cluster )
     Var
   }
   
-  Gfunc3= function(L,R,x,delta,tau,ww,wr=NULL,eta,id,cluster,beta,Sigma) {
+  Boot.multi= function(L,R,x,delta,tau,ww,wr=NULL,eta,id,cluster,beta,Sigma) {
     n=length(L)
     library(MASS)
     Shat = t(replicate(B,{
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       if(is.null(estimation)){
-        Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n
+        Efunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
       }else{
-        DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*n*sqrt(cluster)
+        DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) * sqrt(cluster))
+    Var = (cov(Shat) * cluster )
     Var
   }
   
@@ -528,16 +536,16 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(var.estimation=="Bootstrap" & cluster==n){
       if(is.null(estimation)){
-        Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.uni(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }else{
-        Gamma = Gfunc2(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.uni(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }
       
     }else if(var.estimation=="Bootstrap" & cluster!=n){
       if(is.null(estimation)){
-        Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.multi(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }else{
-        Gamma = Gfunc3(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.multi(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }
     }
     new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
