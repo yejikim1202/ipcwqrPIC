@@ -238,26 +238,26 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,0,1)
       deltaR = ifelse(delta==4|delta==2,0,1)
-      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
       deltaL = ifelse(delta==3,0,1)
       deltaR = ifelse(delta==2,0,1)
-      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
       #rc
       R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y); y=Y
       deltaR = ifelse(delta==2,0,1)
-      dt=data.frame(R=R,statusr=deltaR,x=x,xx=1)
+      dt=data.frame(R=R,statusr=deltaR,x=x)
       
     }else if(sum(delta==3)!=0){ 
       #lc
       L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y); y=Y
       deltaL = ifelse(delta==3,0,1)
-      dt=data.frame(L=L,statusl=deltaL,x=x,xx=1)
+      dt=data.frame(L=L,statusl=deltaL,x=x)
     }
     
     
@@ -347,8 +347,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
-      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
     }
     # else if(var.estimation=="IS"){
     #   U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
@@ -370,8 +369,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
-      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
     }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
@@ -479,12 +477,12 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       tabid=as.vector(table(id))
       idx = as.vector(unlist(lapply(tabid, function(x) sample(x=x,size=x,replace = TRUE))))
       if(is.null(estimation)){
-        Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)
+        Efunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma) 
       }else{
         DREfunc(L=L[idx],R=R[idx],T=T[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma) * sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) * cluster)
+    Var = (cov(Shat) * cluster * sqrt(cluster) )
     Var
   }
   
