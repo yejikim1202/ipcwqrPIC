@@ -111,7 +111,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
   library(randomForestSRC)
   
   
-  
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
     if(sum(delta==4)!=0){ 
@@ -366,15 +365,13 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
     if(application==TRUE){
-      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+    }else{
+      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
     # else if(var.estimation=="IS"){
     #   U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
     # }
-    else{
-      U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
-    }
     Eft=U/cluster
     Eft
   }
@@ -388,8 +385,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
     if(application==TRUE){
-      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
     }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
@@ -498,7 +494,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         DREfunc(L=L[idx],R=R[idx],x=x[idx,],delta=delta[idx],tau=tau,wr=wr[idx],ww=ww[idx],eta=eta[idx],cluster=cluster,beta = beta, Sigma = Sigma)*sqrt(cluster)
       }
     }))
-    Var = (cov(Shat) * cluster )
+    Var = (cov(Shat) * cluster * sqrt(cluster) )
     Var
   }
   
