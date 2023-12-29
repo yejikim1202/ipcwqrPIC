@@ -348,11 +348,9 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     wwind = ww*ind
     if(application==TRUE){
       U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-    }
-    # else if(var.estimation=="IS"){
-    #   U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
-    # }
-    else{
+    }else if(var.estimation=="IS"){
+      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+    }else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
     Eft=U/cluster
