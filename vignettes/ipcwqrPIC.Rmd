@@ -106,9 +106,9 @@ delta=case_when(
 )
 L=L; R=R; T=T; delta=delta; x=cbind(x1,x2); tau=0.3
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "IS")
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,application=TRUE,var.estimation = "Bootstrap")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,var.estimation = "Bootstrap")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "IS")
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,application=TRUE,estimation = "DR", var.estimation = "Bootstrap")
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,estimation = "DR", var.estimation = "Bootstrap")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Beran", hlimit = 0.1, var.estimation = "IS")
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype = "Ishwaran", var.estimation = "IS")
 ```
@@ -138,7 +138,7 @@ delta=case_when(
     TRUE ~ 1 #observed
   )
 ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="IS",id=NULL)
-ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation="Bootstrap",id=id,index = 1)
+ipcwqrPIC::dcrq(L=L,R=R,T=T,delta=delta,x=x,tau=tau,wttype="KM",var.estimation="Bootstrap",id=id,index = 1)
 ```
 
 In real data analysis, we apply our proposed method to the multivariate clustered PIC data using a phase 3 metastatic colorectal cancer clinical trial. This dataset is accessible for data(mCRC) in the PICBayes R package (Pan, 2021).
