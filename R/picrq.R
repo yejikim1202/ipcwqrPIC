@@ -545,9 +545,9 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       }
     }else if(var.estimation=="Bootstrap" & cluster!=n){
       if(is.null(estimation)){
-        Gamma = Boot.multi(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.multi(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }else{
-        Gamma = Boot.multi(L=L,R=R,T=T,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+        Gamma = Boot.multi(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,wr=wr,eta=eta,id=id,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       }
     }
     new_Sigma = up_Sigma(Y=Y,Afunc=Amat,Gfunc=Gamma,cluster=cluster)
