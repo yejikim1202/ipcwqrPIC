@@ -166,7 +166,7 @@ delta=with(d,ifelse(y==3,1,
 U=(log(d$U));V=log(d$V); x = cbind(d$x1,d$x2); id=d$id;  tau=0.3;
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,var.estimation = "IS",id=id,index = 1)
 ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
-ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="Beran",application=TRUE,estimatio="DR",hlimit=0.1,var.estimation = "Bootstrap",id=id,index = 1,B=100)
+# ipcwqrPIC::picrq(L=U,R=V,delta=delta,x=x,tau=tau,wttype="KM",application=TRUE,estimation="DR",hlimit=0.1,var.estimation = "IS",id=id,index = 1,B=100)
 ```
 
 
