@@ -205,8 +205,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     ker = dnorm(outer(x[,contx1.pos],x[,contx2.pos],"-")/hlimit)
     Wnj = ker / rowSums(ker)
     if(sum(delta==4)!=0){
-      denomr = rowSums(outer(y,y,"<=")*(Wnj))
-      denoml = rowSums(outer(y,y,">=")*(Wnj))
+      denomr = rowSums(outer(y,y,">=")*(Wnj))
+      denoml = rowSums(outer(y,y,"<=")*(Wnj))
     }else{
       denomr = rowSums(outer(y,y,"<=")*(Wnj))
       denoml = rowSums(outer(y,y,">=")*(Wnj))
@@ -404,7 +404,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
         dMr=-( (yind/denom)*dNir)
-        Qr=(t(xx/n)%*%((ind2 - tau)))
+        Qr=(t(xx/n)%*%((ind2 - tau)*wr))
         Qrmat=matrix(rep(Qr,each=n), nrow = n)
         Rft=t(t(wr*dMr *(eta))%*%( Qrmat ))
         UR=UR+((Rft))
@@ -414,7 +414,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
         dMl=(-( ((1-yind)/(n+1-denom))*dNil))
-        Ql=(t(xx/n)%*%((ind3 - tau)))
+        Ql=(t(xx/n)%*%((ind3 - tau)*wl))
         Qlmat=matrix(rep(Ql,each=n), nrow = n)
         Lft=t(t(wl*dMl *(eta))%*%( Qlmat ))
         UL=UL+((Lft))
@@ -531,7 +531,8 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       new_beta = c(old_beta) - solve(Amat)%*%Efunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }else if(estimation=="DR"){
       wr=wtft(L=L,R=R,T=NULL,estimation="DR",delta=delta)# wr=Rwtfunc(L=L,R=R,T=T,delta=delta)
-      new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
+      new_beta = BB::dfsane(par=old_beta,fn=DREfunc,L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,Sigma = old_Sigma,control=list(trace=FALSE))$par
+      # new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
     
     if(var.estimation=="IS"){
