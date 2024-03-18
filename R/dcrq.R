@@ -11,7 +11,7 @@ NULL
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param application modified estimating method is applied, set \code{application=TRUE}.
+#' @param application modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.
 #' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is 0.1
@@ -198,9 +198,10 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
         
         if(sum(delta==1)==n){
           ww[i] = 1
+          
         }else if(sum(delta==4)!=0){ 
-          etar = 1*(y<=y0 & deltaR==1)
-          etal = 1*(y>=y0 & deltaL==1)
+          etar = 1*(y>=y0 & deltaR==1)
+          etal = 1*(y<=y0 & deltaL==1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
           ww[i] = 1/pmax(1-(sr-sl), tol.wt)
@@ -229,8 +230,6 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
     ww
   }
   
-  
-  
   Ishfunc = function(L,R,T=NULL,x,delta) {
     
     if(sum(delta==4)!=0){ 
@@ -238,26 +237,26 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       L = pmax(L,1e-8); R = pmax(R,1e-8); n=length(L)
       deltaL = ifelse(delta==4|delta==3,0,1)
       deltaR = ifelse(delta==4|delta==2,0,1)
-      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x)
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
       #dc
       L = pmax(L,1e-8); R=pmax(R,1e-8); Y=ifelse(L<R, pmin(R,pmax(L,T)), pmin(R,T) );n=length(Y);
       deltaL = ifelse(delta==3,0,1)
       deltaR = ifelse(delta==2,0,1)
-      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x)
+      dt=data.frame(L=L,R=R,statusl=deltaL,statusr=deltaR,x=x,xx=1)
       
     }else if(sum(delta==2)!=0 & sum(delta==3)==0){  
       #rc
       R=pmax(R,1e-8); Y=pmin(R,T); n=length(Y); y=Y
       deltaR = ifelse(delta==2,0,1)
-      dt=data.frame(R=R,statusr=deltaR,x=x)
+      dt=data.frame(R=R,statusr=deltaR,x=x,xx=1)
       
     }else if(sum(delta==3)!=0){ 
       #lc
       L = pmax(L,1e-8); Y=pmax(L,T); n=length(Y); y=Y
       deltaL = ifelse(delta==3,0,1)
-      dt=data.frame(L=L,statusl=deltaL,x=x)
+      dt=data.frame(L=L,statusl=deltaL,x=x,xx=1)
     }
     
     
@@ -265,16 +264,18 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
-      kml.obj <- rfsrc(Surv(L, statusl) ~ .-L-statusl-R-statusr, data=dt)
+      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
       
-      kmr.obj <- rfsrc(Surv(R, statusr) ~ .-L-statusl-R-statusr, data=dt)
+      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-L-statusl-R-statusr, data=dt)
+      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
       kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
       survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
       
-    }else if(sum(delta==2)!=0 & sum(delta)!=0){ 
-      kml.obj <- rfsrc(Surv(-L, statusl) ~ .-L-statusl-R-statusr, data=dt)
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      kml.obj <- rfsrc(Surv(L, statusl) ~ .-L-statusl-R-statusr, data=dt)
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
       
@@ -379,7 +380,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
         resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
         dMr=-( (yind/denom)*dNir)
-        Qr=(t(xx/n)%*%((ind2 - tau)*wr))
+        Qr=(t(xx/n)%*%((ind2 - tau)))
         Qrmat=matrix(rep(Qr,each=n), nrow = n)
         Rft=t(t(wr*dMr *(eta))%*%( Qrmat ))
         UR=UR+((Rft))
@@ -390,7 +391,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
         resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
         dMl=(-( ((1-yind)/(n+1-denom))*dNil))
-        Ql=(t(xx/n)%*%((ind3 - tau)*wl))
+        Ql=(t(xx/n)%*%((ind3 - tau)))
         Qlmat=matrix(rep(Ql,each=n), nrow = n)
         Lft=t(t(wl*dMl *(eta))%*%( Qlmat ))
         UL=UL+((Lft))

@@ -10,7 +10,7 @@ NULL
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param application modified estimating method is applied, set \code{application=TRUE}.
+#' @param application modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.
 #' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is 0.1
@@ -100,7 +100,7 @@ NULL
 #'
 #'
 
-picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=NULL,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
+picrq=function(L,R,delta,x,tau,estimation=NULL,var.estimation=NULL,application=FALSE,wttype="KM",hlimit=NULL,contx1.pos=1,contx2.pos=1,id=NULL,index=1,B=100,maxit=100,max.iter=100,tol.wt=1e-3,tol=1e-3){
   
   library(extRemes)
   library(MASS)
@@ -109,8 +109,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
   library(quantreg)
   library(glmnet)
   library(randomForestSRC)
-  
-  
   
   wtft = function(L,R,T=NULL,estimation=NULL,delta){
     
@@ -220,9 +218,10 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         
         if(sum(delta==1)==n){
           ww[i] = 1
+          
         }else if(sum(delta==4)!=0){ 
-          etar = 1*(y<=y0 & deltaR==1)
-          etal = 1*(y>=y0 & deltaL==1)
+          etar = 1*(y>=y0 & deltaR==1)
+          etal = 1*(y<=y0 & deltaL==1)
           sr = prod((1 - nom/denomr)^etar)
           sl = 1-prod((1 - nom/denoml)^etal)
           ww[i] = 1/pmax(1-(sr-sl), tol.wt)
@@ -285,18 +284,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       survl=survr=0
       
     }else if(sum(delta==4)!=0){ 
-      kml.obj <- rfsrc(Surv(-L, statusl==1) ~ .-L-statusl-R-statusr, data=dt)
-      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
-      kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
-      survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
-      
-      kmr.obj <- rfsrc(Surv(R, statusr==1) ~ .-L-statusl-R-statusr, data=dt)
-      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
-      kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
-      survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
-      
-    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
-      kml.obj <- rfsrc(Surv(-L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
+      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl-R-statusr, data=dt)
       # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
@@ -306,15 +294,22 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
       survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
       
+    }else if(sum(delta==2)!=0 & sum(delta==3)!=0){ 
+      kml.obj <- rfsrc(Surv(L, statusl) ~ .-L-statusl-R-statusr, data=dt)
+      kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
+      survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
+      
+      kmr.obj <- rfsrc(Surv(R, statusr) ~ .-L-statusl-R-statusr, data=dt)
+      kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
+      survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
+      
     }else if(sum(delta==2)!=0 & sum(delta==3)==0){
-      kmr.obj <- rfsrc(Surv(R, statusr==0) ~ .-R-statusr, data=dt)
-      # kmr.obj <- predict(rfsrc(Surv(R, statusr) ~ xx, data=dt))
+      kmr.obj <- rfsrc(Surv(R, statusr) ~ .-R-statusr, data=dt)
       kmr <- get.brier.survival(kmr.obj, cens.model="rfsrc")
       survr=kmr$surv.aalen; survr[is.na(survr)]=0; survr
       
     }else if(sum(delta==3)!=0){ 
-      kml.obj <- rfsrc(Surv(L, statusl==0) ~ .-L-statusl, data=dt)
-      # kml.obj <- predict(rfsrc(Surv(L, statusl) ~ xx, data=dt))
+      kml.obj <- rfsrc(Surv(L, statusl) ~ .-L-statusl, data=dt)
       kml <- get.brier.survival(kml.obj, cens.model="rfsrc")
       survl=kml$surv.aalen; survl[is.na(survl)]=0; survl
     }
@@ -365,12 +360,13 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     ind = ifelse(res<=0,1,0)
     Phi = as.vector( pnorm( -res/ss ) )
     wwind = ww*ind
-    if(application==TRUE){
+    
+    if(var.estimation=="IS"){
+      U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
+    }
+    else if(application==TRUE){
       U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
     }
-    # else if(var.estimation=="IS"){
-    #   U = as.vector( t(xx *(eta) )%*%(Phi* ww  - tau) )
-    # }
     else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
@@ -386,10 +382,12 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     res = as.numeric(Y - xx%*%beta)
     ind = ifelse(res<=0,1,0)
     wwind = ww*ind
+    
     if(application==TRUE){
-      # U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
-      U = as.vector( t(xx *(eta) *ww )%*%(ind) - t(xx *(eta) )%*%(tau) )
-    }else{
+      # Different weighting position
+      U = as.vector( t(xx *(eta) *ww )%*%(ind - tau) )
+    }
+    else{
       U = as.vector( t(xx *(eta) )%*%(wwind - tau) )
     }
     UR=matrix(0,p,1)
@@ -404,7 +402,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         resr = as.numeric((Y - xx%*%beta))
         ind2 = ifelse(resr<=0,1,0)
         dMr=-( (yind/denom)*dNir)
-        Qr=(t(xx/n)%*%((ind2 - tau)*wr))
+        Qr=(t(xx/n)%*%((ind2 - tau)))
         Qrmat=matrix(rep(Qr,each=n), nrow = n)
         Rft=t(t(wr*dMr *(eta))%*%( Qrmat ))
         UR=UR+((Rft))
@@ -414,7 +412,7 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
         resl = as.numeric((Y - xx%*%beta))
         ind3 = ifelse(resl<=0,1,0)
         dMl=(-( ((1-yind)/(n+1-denom))*dNil))
-        Ql=(t(xx/n)%*%((ind3 - tau)*wl))
+        Ql=(t(xx/n)%*%((ind3 - tau)))
         Qlmat=matrix(rep(Ql,each=n), nrow = n)
         Lft=t(t(wl*dMl *(eta))%*%( Qlmat ))
         UL=UL+((Lft))
@@ -470,7 +468,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     (Gamma-GammaR+GammaL)/cluster
   }
   
-  
   Boot.uni = function(L,R,x,delta,tau,ww,wr=NULL,eta,cluster,beta,Sigma) {
     n=length(L);
     library(MASS)
@@ -503,7 +500,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
     Var
   }
   
-  
   # update variance estimator
   up_Sigma = function(Y,Afunc,Gfunc,cluster){
     n=length(Y)
@@ -534,7 +530,6 @@ picrq=function(L,R,delta,x,tau,estimation=NULL,application=FALSE,var.estimation=
       new_beta = BB::dfsane(par=old_beta,fn=DREfunc,L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,Sigma = old_Sigma,control=list(trace=FALSE))$par
       # new_beta = c(old_beta) - solve(Amat)%*%DREfunc(L=L,R=R,x=x,delta=delta,tau=tau,wr=wr,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
     }
-    
     if(var.estimation=="IS"){
       Gamma = Gfunc(L=L,R=R,x=x,delta=delta,tau=tau,ww=ww,eta=eta,cluster=cluster,beta = old_beta, Sigma = old_Sigma)
       
