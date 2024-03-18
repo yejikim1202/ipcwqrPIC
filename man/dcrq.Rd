@@ -42,7 +42,7 @@ dcrq(
 
 \item{estimation}{estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.}
 
-\item{application}{modified estimating method is applied, set \code{application=TRUE}.}
+\item{application}{modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.}
 
 \item{var.estimation}{variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.}
 

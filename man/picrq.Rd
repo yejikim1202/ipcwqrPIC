@@ -11,8 +11,8 @@ picrq(
   x,
   tau,
   estimation = NULL,
-  application = FALSE,
   var.estimation = NULL,
+  application = FALSE,
   wttype = "KM",
   hlimit = NULL,
   contx1.pos = 1,
@@ -39,9 +39,9 @@ picrq(
 
 \item{estimation}{estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.}
 
-\item{application}{modified estimating method is applied, set \code{application=TRUE}.}
-
 \item{var.estimation}{variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.}
+
+\item{application}{modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.}
 
 \item{wttype}{weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
