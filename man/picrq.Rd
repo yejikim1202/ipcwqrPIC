@@ -41,7 +41,7 @@ picrq(
 
 \item{var.estimation}{variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.}
 
-\item{application}{modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.}
+\item{application}{modified estimating method is applied, set \code{application=TRUE}.}
 
 \item{wttype}{weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".}
 
