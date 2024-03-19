@@ -11,7 +11,7 @@ NULL
 #' @param x X matrix of baseline covariates.
 #' @param tau quantile level.
 #' @param estimation estimating method of partly interval censored, if estimation="DR", doubly robust estimator is estimated.
-#' @param application modified estimating method wiith different weighting position is applied, set \code{application=TRUE}.
+#' @param application modified estimating method is applied, set \code{application=TRUE}.
 #' @param var.estimation variance estimating method, if \code{var.estimation="IS"}, the induced smoothing method is used, and else if \code{var.estimation="Bootstrap"}, variance bootstrapping method is used.
 #' @param wttype weight estimating method, default is "KM", Beran's nonparametric KM estimating method as "Beran", and  Ishwaran's random survival forests KM estimating method as "Ishwaran".
 #' @param hlimit bandwidth value, default is 0.1
@@ -127,6 +127,7 @@ dcrq=function(L,R,T,delta,x,tau,estimation=NULL,application=FALSE,var.estimation
         
         if(sum(delta==1)==n){
           ww[i] = 1
+          
         }else if(sum(delta==4)!=0){ 
           sl=approx(c(0,-kml$time,maxit),c(1,1-kml$surv,0), xout=L[i])$y
           sr=approx(c(0,kmr$time,maxit),c(1,kmr$surv,0), xout=R[i])$y
