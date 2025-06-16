@@ -1,5 +1,7 @@
 # Introduction to `ipcwqrPIC` R package
 
+## Paper
+Inverse‐Weighted Quantile Regression With Partially Interval‐Censored Data [here](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.70001).
 
 ## Introduction
 `ipcwqrPIC` is the R package to fit a new inverse-probability censoring weighted (IPCW) estimating procedure for censored quantile regression when the data are partially interval-censored that include doubly-censored (DC) data and partly interval-censored (PIC) and possibly correlated within same cluster.
