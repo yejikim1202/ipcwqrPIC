@@ -1,4 +1,4 @@
-# Introduction to `ipcwqrPIC` R package
+# Introduction to `ipcwqrPIC` R package 
 
 ## Paper
 Inverse‐Weighted Quantile Regression With Partially Interval‐Censored Data [here](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.70001).
